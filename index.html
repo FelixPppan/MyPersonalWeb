@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的个人网站</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        .navbar {
+            background: #222;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+            .navbar ul {
+                display: flex;
+                list-style: none;
+                gap: 2rem;
+                justify-content: center;
+            }
+
+            .navbar a {
+                color: white;
+                text-decoration: none;
+                font-size: 1.1rem;
+                cursor: pointer;
+            }
+
+                .navbar a:hover {
+                    color: #4fc3f7;
+                }
+
+        .container {
+            max-width: 900px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+        }
+
+        h1, h2 {
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        p {
+            line-height: 1.7;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .project-list {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .project-card {
+            padding: 1.2rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+            .project-card span {
+                font-size: 1.2rem;
+                font-weight: bold;
+                color: #0277bd;
+                cursor: pointer;
+            }
+
+                .project-card span:hover {
+                    text-decoration: underline;
+                }
+
+        .project-image {
+            width: 100%;
+            max-width: 700px;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar"></div>
+    <div id="content" class="container"></div>
+    <script src="app.js"></script>
+</body>
+</html>
