@@ -1,122 +1,131 @@
-// ==============================================
-// 导航栏菜单（修改这里，全站自动更新）
-// ==============================================
+// 导航菜单
 const routes = [
-    { name: "首页", path: "/" },
-    { name: "游戏设计课开发者博客", path: "/blog" },
-    { name: "作品集", path: "/portfolio" },
-    { name: "关于我", path: "/about" },
+    { name: "首页 | Home", path: "/" },
+    { name: "游戏设计课博客 | Game Dev Blog", path: "/blog" },
+    { name: "作品集 | Portfolio", path: "/portfolio" },
+    { name: "关于我 | About", path: "/about" },
 ];
 
-// ==============================================
-// 博客项目数据（在这里写你的项目）
-// ==============================================
+// 项目数据
 const projects = [
     {
         id: 1,
-        title: "项目 1：2D 平台跳跃游戏原型",
-        desc: "使用 Unity / Godot 制作基础角色移动与跳跃",
-        image: "https://picsum.photos/800/450",
+        title: "项目 1：2D 平台跳跃原型 | Project 1: 2D Platformer Prototype",
+        desc: "角色移动、跳跃、碰撞系统 | Player Movement, Jump & Collision",
+        image: "https://picsum.photos/900/500",
         content: `
-      <h2>项目介绍</h2>
-      <p>这是我在游戏设计课完成的第一个原型项目，实现了：</p>
-      <ul style="margin-left:1.5rem; line-height:1.7">
-        <li>角色左右移动</li>
-        <li>跳跃与二段跳</li>
-        <li>碰撞地面与平台</li>
-        <li>基本动画状态切换</li>
+      <h2>项目介绍 | Project Introduction</h2>
+      <p>本项目是游戏设计课的基础原型，实现核心平台跳跃机制。</p>
+      <p>This is a basic prototype for game design class, implementing core platformer mechanics.</p>
+
+      <ul>
+        <li>角色移动系统 | Character Movement</li>
+        <li>跳跃与二段跳 | Jump & Double Jump</li>
+        <li>地面碰撞检测 | Ground Collision</li>
+        <li>动画状态切换 | Animation States</li>
       </ul>
-      <h2>开发过程</h2>
-      <p>在这里写你遇到的问题、解决方法、思考……</p>
+
+      <h2>开发日志 | Dev Log</h2>
+      <p>在这里记录你的开发过程、遇到的问题与解决方案。</p>
+      <p>Write your development process, problems and solutions here.</p>
     `
     },
     {
         id: 2,
-        title: "项目 2：敌人 AI 逻辑",
-        desc: "巡逻、追击、攻击状态机设计",
-        image: "https://picsum.photos/800/451",
-        content: "<h2>AI 开发日志</h2><p>这里是你的 AI 开发内容……</p>"
+        title: "项目 2：敌人 AI 设计 | Project 2: Enemy AI Design",
+        desc: "巡逻、追击、攻击状态机 | Patrol, Chase, Attack State Machine",
+        image: "https://picsum.photos/900/501",
+        content: `
+      <h2>AI 逻辑说明 | AI Logic</h2>
+      <p>使用有限状态机实现敌人行为控制。</p>
+      <p>Using finite state machine to control enemy behaviors.</p>
+    `
     }
 ];
 
-// ==============================================
-// 1. 动态生成导航栏
-// ==============================================
+// ==========================================
+// 本地兼容版：用哈希路由 #，双击就能用
+// ==========================================
 function renderNavbar() {
     const nav = document.getElementById("navbar");
     nav.innerHTML = `
     <ul>
-      ${routes.map(route => `<li><a onclick="navigate('${route.path}')">${route.name}</a></li>`).join('')}
+      ${routes.map(r => `
+        <li><a onclick="navigate('${r.path}')">${r.name}</a></li>
+      `).join('')}
     </ul>
   `;
 }
 
-// ==============================================
-// 2. 路由跳转（JS 无刷新切换页面）
-// ==============================================
 function navigate(path) {
-    window.history.pushState({}, "", path);
-    renderPage();
+    location.hash = path;
 }
 
-// ==============================================
-// 3. 根据地址渲染不同页面
-// ==============================================
 function renderPage() {
-    const path = window.location.pathname;
-    const content = document.getElementById("content");
+    const hash = location.hash.replace('#', '') || '/';
+    const el = document.getElementById("content");
 
-    // 首页
-    if (path === "/" || path === "/index.html") {
-        content.innerHTML = `
-      <h1>欢迎来到我的个人网站</h1>
-      <p>这里记录我的学习、作品与游戏开发笔记。</p>
-      <p>点击上方「游戏设计课开发者博客」开始阅读。</p>
-    `;
-    }
-
-    // 博客列表页
-    else if (path === "/blog") {
-        content.innerHTML = `
-      <h1>游戏设计课 - 开发者博客</h1>
-      <p>这里记录我在游戏设计课上的学习过程、思考与项目开发日志。</p>
-      <h2>课程笔记区域</h2>
-      <p>【你可以在这里自由写课程学习内容】</p>
-      <div class="project-list">
-        ${projects.map(p => `
-          <div class="project-card">
-            <span onclick="navigate('/project/${p.id}')">${p.title}</span>
-            <p>${p.desc}</p>
-          </div>
-        `).join('')}
+    if (hash === "/" || hash === "/index.html") {
+        el.innerHTML = `
+      <div class="card">
+        <h1>个人网站 | Personal Website</h1>
+        <p>欢迎来到我的个人主页，这里展示游戏设计课程笔记与项目开发过程。</p>
+        <p>Welcome to my personal site. It includes game design notes and project dev logs.</p>
       </div>
     `;
     }
 
-    // 项目详情页
-    else if (path.startsWith("/project/")) {
-        const id = parseInt(path.split("/")[2]);
-        const proj = projects.find(p => p.id === id);
-        if (!proj) {
-            content.innerHTML = "<h1>项目不存在</h1>";
-            return;
-        }
-        content.innerHTML = `
-      <h1>${proj.title}</h1>
-      <img src="${proj.image}" class="project-image" alt="游戏截图">
-      ${proj.content}
+    else if (hash === "/blog") {
+        el.innerHTML = `
+      <div class="card">
+        <h1>游戏设计课开发者博客 | Game Design Dev Blog</h1>
+        <p>记录课程学习、原型开发与设计思考。</p>
+        <p>Recording learning, prototyping and design thinking.</p>
+      </div>
+
+      <div class="card">
+        <h2>课程笔记 | Course Notes</h2>
+        <p>【在这里开始写你的笔记内容】</p>
+        <p>【Start writing your notes here】</p>
+      </div>
+
+      <h2>课程项目 | Course Projects</h2>
+      ${projects.map(p => `
+        <div class="card project-card" onclick="navigate('/project/${p.id}')">
+          <h3>${p.title}</h3>
+          <p>${p.desc}</p>
+        </div>
+      `).join('')}
     `;
     }
 
-    // 其他页面
+    else if (hash.startsWith("/project/")) {
+        const id = parseInt(hash.split("/")[2]);
+        const proj = projects.find(p => p.id === id);
+        if (!proj) {
+            el.innerHTML = `<h1>项目不存在 | Project Not Found</h1>`;
+            return;
+        }
+        el.innerHTML = `
+      <h1>${proj.title}</h1>
+      <img src="${proj.image}" class="project-image" alt="Project Screenshot">
+      <div class="card">
+        ${proj.content}
+      </div>
+    `;
+    }
+
     else {
-        content.innerHTML = `<h1>页面建设中</h1>`;
+        el.innerHTML = `
+      <div class="card">
+        <h1>建设中 | Under Construction</h1>
+        <p>页面正在更新，敬请期待。</p>
+        <p>This page is under construction, stay tuned.</p>
+      </div>
+    `;
     }
 }
 
-// ==============================================
-// 初始化：渲染导航 + 页面
-// ==============================================
 renderNavbar();
 renderPage();
-window.onpopstate = renderPage;
+window.addEventListener("hashchange", renderPage);
