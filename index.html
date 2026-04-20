@@ -1,135 +1,123 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Personal Website | 个人网站</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
 
-body {
-  background-color: #f8f9fa;
-  color: #333;
-  line-height: 1.6;
-}
+        body {
+            background: #f2f5f8;
+            color: #333;
+            line-height: 1.6;
+        }
 
-/* ———————————————————————————————————
-   导航栏（明显按钮 + 阴影 + 可点击）
-——————————————————————————————————— */
-.navbar {
-  background: #1a202c;
-  padding: 1.2rem 1.5rem;
-  position: sticky;
-  top: 0;
-  z-index: 99;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  border-bottom: 2px solid #2b6cb0;
-}
+        /* 导航栏整体 */
+        #navbar {
+            background: #1e293b;
+            padding: 1.2rem;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 99;
+        }
 
-.navbar ul {
-  display: flex;
-  list-style: none;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
+            #navbar ul {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 12px;
+                list-style: none;
+                flex-wrap: wrap;
+            }
 
-/* 按钮样式！非常明显 */
-.navbar li {
-  background-color: #2d3748;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
+        /* 每个导航都是按钮！！！ */
+        .nav-btn {
+            background: #334155;
+            padding: 10px 16px;
+            border-radius: 10px;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
 
-.navbar li:hover {
-  background-color: #2b6cb0;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(43, 108, 176, 0.3);
-}
+            .nav-btn:hover {
+                background: #3b82f6;
+                transform: translateY(-3px);
+                box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+            }
 
-.navbar a {
-  color: #fff;
-  text-decoration: none;
-  font-weight: 600;
-  cursor: pointer;
-}
+            .nav-btn a {
+                color: white;
+                font-weight: 600;
+                text-decoration: none;
+                cursor: pointer;
+            }
 
-/* 内容容器 */
-.container {
-  max-width: 960px;
-  margin: 3rem auto;
-  padding: 0 1.2rem;
-}
+        .container {
+            max-width: 920px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+        }
 
-h1 {
-  font-size: 2rem;
-  margin-bottom: 1.2rem;
-  color: #2d3748;
-}
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 1.6rem;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+            margin-bottom: 1.2rem;
+        }
 
-h2 {
-  font-size: 1.5rem;
-  margin: 1.8rem 0 1rem;
-  color: #2b6cb0;
-}
+        h1 {
+            font-size: 2rem;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
 
-p {
-  margin-bottom: 1rem;
-  font-size: 1.05rem;
-}
+        h2 {
+            font-size: 1.4rem;
+            color: #2563eb;
+            margin: 1.4rem 0 0.8rem;
+        }
 
-/* 卡片样式 */
-.card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.06);
-  margin-bottom: 1.2rem;
-  transition: transform 0.2s;
-}
+        p {
+            font-size: 1rem;
+            margin-bottom: 0.8rem;
+        }
 
-.card:hover {
-  transform: translateY(-3px);
-}
+        .project-card {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
 
-/* 项目卡片 */
-.project-card {
-  cursor: pointer;
-}
+            .project-card:hover {
+                transform: translateY(-4px);
+            }
 
-.project-card h3 {
-  font-size: 1.15rem;
-  color: #2b6cb0;
-  margin-bottom: 0.4rem;
-}
+        .project-image {
+            width: 100%;
+            border-radius: 12px;
+            margin: 1.2rem 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
 
-.project-card p {
-  color: #555;
-  font-size: 0.95rem;
-}
+        ul {
+            margin-left: 1.5rem;
+        }
 
-/* 项目图片 */
-.project-image {
-  width: 100%;
-  border-radius: 10px;
-  margin: 1.2rem 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-ul {
-  margin-left: 1.6rem;
-  margin-bottom: 1rem;
-}
-
-li {
-  margin-bottom: 0.4rem;
-}
-
-@media (max-width: 640px) {
-  .navbar ul {
-    gap: 0.6rem;
-  }
-  .navbar li {
-    padding: 0.5rem 0.8rem;
-  }
-}
+        li {
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar"></div>
+    <div id="content" class="container"></div>
+    <script src="app.js"></script>
+</body>
+</html>

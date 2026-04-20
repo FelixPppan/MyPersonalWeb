@@ -44,23 +44,27 @@ const projects = [
 ];
 
 // ==========================================
-// 本地兼容版：用哈希路由 #，双击就能用
+// 导航栏渲染（每个菜单都是独立按钮）
 // ==========================================
 function renderNavbar() {
     const nav = document.getElementById("navbar");
     nav.innerHTML = `
     <ul>
-      ${routes.map(r => `
-        <li><a onclick="navigate('${r.path}')">${r.name}</a></li>
+      ${routes.map(route => `
+        <li class="nav-btn">
+          <a onclick="navigate('${route.path}')">${route.name}</a>
+        </li>
       `).join('')}
     </ul>
   `;
 }
 
+// 路由跳转
 function navigate(path) {
     location.hash = path;
 }
 
+// 渲染页面
 function renderPage() {
     const hash = location.hash.replace('#', '') || '/';
     const el = document.getElementById("content");
@@ -74,7 +78,6 @@ function renderPage() {
       </div>
     `;
     }
-
     else if (hash === "/blog") {
         el.innerHTML = `
       <div class="card">
@@ -98,7 +101,6 @@ function renderPage() {
       `).join('')}
     `;
     }
-
     else if (hash.startsWith("/project/")) {
         const id = parseInt(hash.split("/")[2]);
         const proj = projects.find(p => p.id === id);
@@ -114,7 +116,6 @@ function renderPage() {
       </div>
     `;
     }
-
     else {
         el.innerHTML = `
       <div class="card">
@@ -126,6 +127,7 @@ function renderPage() {
     }
 }
 
+// 初始化
 renderNavbar();
 renderPage();
 window.addEventListener("hashchange", renderPage);
