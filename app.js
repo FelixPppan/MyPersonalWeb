@@ -10,19 +10,19 @@ const routes = [
 const projects = [
     {
         id: 1,
-        title: "项目 1：2D 平台跳跃原型 | Project 1: 2D Platformer Prototype",
+        title: "项目 1：海狸生存游戏 | Project 1: Survival Game 《Beavering Away》",
         desc: "角色移动、跳跃、碰撞系统 | Player Movement, Jump & Collision",
         image: "https://picsum.photos/900/500",
         content: `
       <h2>项目介绍 | Project Introduction</h2>
-      <p>本项目是游戏设计课的基础原型，实现核心平台跳跃机制。</p>
-      <p>This is a basic prototype for game design class, implementing core platformer mechanics.</p>
+      <p>本项目是游戏设计课的基础原型</p>
+      <p>This is a basic prototype for game design class</p>
 
       <ul>
-        <li>角色移动系统 | Character Movement</li>
-        <li>跳跃与二段跳 | Jump & Double Jump</li>
-        <li>地面碰撞检测 | Ground Collision</li>
-        <li>动画状态切换 | Animation States</li>
+        <li>。。。</li>
+        <li>。。。</li>
+        <li>。。。</li>
+        <li>。。。</li>
       </ul>
 
       <h2>开发日志 | Dev Log</h2>
@@ -30,7 +30,7 @@ const projects = [
       <p>Write your development process, problems and solutions here.</p>
     `
     },
-    {
+/*    {
         id: 2,
         title: "项目 2：敌人 AI 设计 | Project 2: Enemy AI Design",
         desc: "巡逻、追击、攻击状态机 | Patrol, Chase, Attack State Machine",
@@ -40,7 +40,7 @@ const projects = [
       <p>使用有限状态机实现敌人行为控制。</p>
       <p>Using finite state machine to control enemy behaviors.</p>
     `
-    }
+    }*/
 ];
 
 // ==========================================
@@ -88,8 +88,8 @@ function renderPage() {
 
       <div class="card">
         <h2>课程笔记 | Course Notes</h2>
-        <p>【在这里开始写你的笔记内容】</p>
-        <p>【Start writing your notes here】</p>
+        <p>【在这里开始写笔记内容】</p>
+        <p>【Start writing notes here】</p>
       </div>
 
       <h2>课程项目 | Course Projects</h2>
