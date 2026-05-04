@@ -12,11 +12,10 @@ body {
 }
 
 #navbar {
-    background: #1e293b;
-    padding: 1rem;
-    position: sticky;
-    top: 0;
-    z-index: 99;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
     #navbar ul {
@@ -51,17 +50,29 @@ body {
     padding: 0 1rem;
 }
 
+/* 毛玻璃卡片 */
 .card {
-    background: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 1.5rem;
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
+
+/* 文字颜色变白，更清晰 */
+h1, h2, h3, p {
+    color: #fff;
+}
+
+/* 导航栏也变成毛玻璃 */
 
 h1, h2 {
     margin-bottom: 1rem;
-    color: #1e293b;
+    color: lightblue;
 }
 
 .en-title {
@@ -84,15 +95,18 @@ h1, h2 {
 }
 
 .portfolio-item {
-    background: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.15);
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    transition: 0.2s;
     cursor: pointer;
+    transition: 0.3s;
 }
 
     .portfolio-item:hover {
+        background: rgba(255,255,255,0.15);
         transform: translateY(-4px);
     }
 
@@ -145,4 +159,49 @@ iframe {
     width: 100%;
     border-radius: 10px;
     margin: 1rem 0;
+}
+
+#meteors {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.meteor {
+    position: absolute;
+    /* 流星长度 */
+    width: 200px;
+    height: 2px;
+    /* 关键：右端亮(头)，左端透明(尾) */
+    background: linear-gradient(270deg, transparent, #e0edff);
+    box-shadow: 0 0 10px #73a9ff;
+    /* 角度：左上到右下倾斜 -45° */
+    transform: rotate(-45deg);
+    opacity: 0;
+    animation: fly 2.2s linear forwards;
+}
+
+@keyframes fly {
+    0% {
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        /* 向左、向下移动 → 从右上往左下飞 */
+        transform: translateX(-1200px) translateY(1200px) rotate(-45deg);
+    }
+}
+#navbar, #content {
+    position: relative;
+    z-index: 10;
 }

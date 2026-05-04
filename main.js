@@ -40,3 +40,16 @@ window.onload = () => {
     renderPage();
     window.addEventListener("hashchange", renderPage);
 };
+
+// 流星背景
+function makeMeteor() {
+    const m = document.createElement("div");
+    m.className = "meteor";
+    m.style.left = Math.random() * window.innerWidth + "px";
+    m.style.top = Math.random() * window.innerHeight / 2 + "px";
+    m.style.width = 120 + Math.random() * 100 + "px";
+    m.style.animationDuration = 1.2 + Math.random() + "s";
+    document.getElementById("meteors").appendChild(m);
+    setTimeout(() => m.remove(), 2000);
+}
+setInterval(makeMeteor, 250);
