@@ -19,6 +19,7 @@ const projectData = [
         type: "web",
         thumb: "images/project2.png",
         url: "https://dishprogram-6bff8.web.app/vue.html#/",
+        link: "https://dishprogram-6bff8.web.app/vue.html#/",
         content: `
       <p>响应式网页，实现制定菜单、联网获取食谱、生成购物清单功能。</p>
       <p>采用 MVP 架构：Model 数据层、View 界面层、Presenter 控制层。</p>
@@ -29,7 +30,8 @@ const projectData = [
         title: "AI 塔罗占卜网站",
         type: "web",
         thumb: "images/project3.png",
-        url: "https://tarot-app-account.web.app",
+        url: "https://tarot-app-dev-yuki.web.app/#/",
+        link: "https://tarot-app-dev-yuki.web.app/#/",
         content: `
       <p>利用AI塔罗占卜API实现抽牌、占卜、解读功能。</p>
       <p>支持Google账户登录、用户信息持久化、历史记录、塔罗教学等扩展功能。</p>
@@ -121,8 +123,13 @@ window.renderProject = function () {
     const p = projectData.find(x => x.id === id);
 
     let media = "";
+    let actionBtn = "";
+
     if (p.type === "video") {
         media = `<iframe src="${p.url}" width="100%" height="400" frameborder="0"></iframe>`;
+    } else if (p.type === "web") {
+        media = `<img src="${p.thumb}" class="project-image" onerror="this.src='https://picsum.photos/800/450?random=${id}'">`;
+        actionBtn = `<a href="${p.link}" target="_blank" class="btn btn-visit">🌐 访问网站 | Visit Website</a>`;
     } else {
         media = `<img src="${p.thumb}" class="project-image" onerror="this.src='https://picsum.photos/800/450?random=${id}'">`;
     }
@@ -133,7 +140,8 @@ window.renderProject = function () {
       ${media}
       <div class="project-content">${p.content}</div>
       <br>
+      ${actionBtn}
       <button class="btn btn-back" onclick="go('portfolio')">← 返回作品集</button>
     </div>
   `;
-};
+}
