@@ -1,9 +1,9 @@
 // 纯路由，无任何数据
 const navItems = [
     { name: "首页 | Home", page: "home" },
-    { name: "游戏设计课博客", page: "blog" },
-    { name: "作品集", page: "portfolio" },
-    { name: "关于我", page: "about" },
+    { name: "博客 | Blog", page: "blog" },
+    { name: "作品集 | Portfolio", page: "portfolio" },
+    { name: "关于我 | About", page: "about" },
 ];
 
 function renderNav() {
