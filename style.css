@@ -269,6 +269,34 @@ iframe {
     font-size: 1.2rem;
 }
 
+.blog-section p {
+    margin: 0 0 1rem;
+    line-height: 1.7;
+}
+
+.blog-section p:last-of-type {
+    margin-bottom: 0;
+}
+
+.blog-section .blog-list {
+    margin: 0 0 1rem;
+    padding-left: 1.5rem;
+    line-height: 1.8;
+}
+
+.blog-section .blog-list li {
+    margin-bottom: 0.35rem;
+}
+
+.blog-section .blog-video {
+    width: 100%;
+    max-width: 100%;
+    margin-top: 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(100, 200, 255, 0.25);
+    background: #000;
+}
+
 #navbar, #content {
     position: relative;
     z-index: 10;

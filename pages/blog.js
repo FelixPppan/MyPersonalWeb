@@ -33,17 +33,44 @@ window.switchBlogTab = function (tab) {
         contentDiv.innerHTML = `
             <h2>DH2650 VT26 - Computer Game Design Blog</h2>
             <div class="blog-section">
-                <h3>课程笔记 | Course Notes</h3>
-                <p>第1周：游戏核心循环</p>
-                <p>第2周：角色控制与物理</p>
-                <p>第3周：UI与状态管理</p>
-                <p>第4周：敌人AI与状态机</p>
-                <p>第5周：关卡设计与节奏</p>
-                <p>第6周：数值平衡</p>
+                <h3>Beavering Away — Team Project Overview</h3>
+                <p>Hello everyone! I'm a member of the team consisting of Guoxi Pan, Alexander Björkman, Natalie Eriksson, Maryam Khan and Tianyang Lu. Over the past two months, we have designed and developed the game <em>Beavering Away</em>.</p>
+                <p>The story of the game goes like this: A severe drought has ravaged the forest where beavers live. Most animals have fled to find new habitats. Now it falls to the beaver to build dams and save the forest from ecological collapse.</p>
             </div>
             <div class="blog-section">
-                <h3>开发日志 | Dev Log</h3>
-                <p>在这里记录你的开发过程、问题、思路、迭代与心得。</p>
+                <h3>Gameplay Features</h3>
+                <p>The game comes with a host of interesting and interactive gameplay features:</p>
+                <ul class="blog-list">
+                    <li>Semi-realistic top-down water simulation</li>
+                    <li>Complete inventory system</li>
+                    <li>Simulated ecosystem</li>
+                    <li>Survival mechanics including a hunger system</li>
+                    <li>Dynamic seasonal changes</li>
+                </ul>
+            </div>
+            <div class="blog-section">
+                <h3>My Role</h3>
+                <p>My main responsibilities include game development, game design and animation rigging.</p>
+            </div>
+            <div class="blog-section">
+                <h3>The Initial Stage</h3>
+                <p>In the first few weeks, we brainstormed ideas for our game. Initially, the team adopted my concept: players take on dual roles as both the town mayor and dungeon master. The ultimate goal is to turn Rockfall Town into a haven for adventurers and the dungeon into a world-famous challenge site, achieving prosperity for the town and steady profits from the dungeon at the same time.</p>
+                <p>After discussions with our supervisor, however, we realized the design was far too complex. It would be nearly impossible to implement even the core systems within our limited timeline. We then switched to a new concept proposed by Alex: a beaver-themed survival game.</p>
+                <p>Following an in-depth team meeting, we finalized the first iteration of the storyline: A young beaver gets separated from its family. A sudden thunderstorm triggers a flash flood, sweeping it off a cliff from its mountaintop den. To reunite with its family, the beaver must swim upstream through three progressively challenging natural areas.</p>
+                <p>It needs to gather resources to build dams and calm the raging currents, as well as construct shelters to stay safe from harsh weather, predators and disturbing noises, before finally returning to its family on the mountaintop.</p>
+                <p>Even this version remained overly complicated. We therefore adopted the optimized plan put forward by Maryam. We kept the core beaver survival theme, and repositioned the game to deliver a relaxing and enjoyable experience.</p>
+                <p>In the final version, players control the beaver to dig river channels and build dams, revitalize parched lands, and draw various animals back to their natural habitats.</p>
+            </div>
+            <div class="blog-section">
+                <h3>Development Phase</h3>
+                <p>We spent the subsequent weeks focusing on development. We made several minor adjustments to our plans along the way. In the end, we completed models for two animal characters, as well as the game's core systems — including crafting, construction, digging and water flow simulation.</p>
+                <p>This is essentially what our current demo looks like. To be honest, it is more of a showcase of basic functions and core concepts rather than a fully polished demo. We received plenty of constructive feedback during in-class presentations.</p>
+                <p>Special thanks also go to our supervisor Björn for his invaluable suggestions.</p>
+                <p>Below is a short gameplay clip of the current game demo:</p>
+                <video class="blog-video" controls playsinline preload="metadata">
+                    <source src="videos/Beavering%20away%20demo.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
             </div>
         `;
     } else if (tab === 'dh2323') {
