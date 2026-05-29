@@ -36,6 +36,7 @@ window.switchBlogTab = function (tab) {
                 <h3>Beavering Away — Team Project Overview</h3>
                 <p>Hello everyone! I'm a member of the team consisting of Guoxi Pan, Alexander Björkman, Natalie Eriksson, Maryam Khan and Tianyang Lu. Over the past two months, we have designed and developed the game <em>Beavering Away</em>.</p>
                 <p>The story of the game goes like this: A severe drought has ravaged the forest where beavers live. Most animals have fled to find new habitats. Now it falls to the beaver to build dams and save the forest from ecological collapse.</p>
+                <p>Visit our project website: <a class="blog-link" href="https://beaverdevelopers.github.io" target="_blank" rel="noopener noreferrer">beaverdevelopers.github.io</a></p>
             </div>
             <div class="blog-section">
                 <h3>Gameplay Features</h3>
@@ -71,6 +72,7 @@ window.switchBlogTab = function (tab) {
                     <source src="videos/Beavering%20away%20demo.mp4" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
+                <p class="blog-link-note">More about the project: <a class="blog-link" href="https://beaverdevelopers.github.io" target="_blank" rel="noopener noreferrer">beaverdevelopers.github.io</a></p>
             </div>
         `;
     } else if (tab === 'dh2323') {
