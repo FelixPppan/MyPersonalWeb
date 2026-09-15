@@ -1,15 +1,114 @@
 <!DOCTYPE html>
+<html lang="zh-CN" data-skin="latex">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="style.css">
+<title>Guoxi Pan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link id="skin-css-soft" rel="stylesheet" href="skins/soft/style.css?v=3" disabled>
+<link id="skin-css-latex" rel="stylesheet" href="skins/latex/style.css?v=latex-unify-4">
+<link id="skin-css-glass" rel="stylesheet" href="skins/glass/style.css?v=6" disabled>
+<link rel="stylesheet" href="skin-ui.css?v=7">
+</head>
+<body>
+<!-- 亲肤：柔光底 + 圆形按下凹陷 -->
+<canvas id="soft-light" aria-hidden="true"></canvas>
+<div id="latex-noise" aria-hidden="true"></div>
 
-<div id="meteors"></div>
+
+<!--
+  乳胶光照：把形状的 alpha 模糊成高度场，再用 feSpecularLighting / feDiffuseLighting
+  按真实法线打光。这不是叠 box-shadow，是真的算了曲面法线，所以才有「吹起来」的体积。
+  sm = 按钮/小元件，lg = 卡片/大面板（模糊半径要按尺寸放大）
+-->
+<svg id="latex-light-defs" aria-hidden="true" width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="latex-lit-sm" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="h" />
+      <feDiffuseLighting in="h" surfaceScale="3.0" diffuseConstant="1.16" lighting-color="#fff8f3" result="d">
+        <feDistantLight azimuth="235" elevation="55" />
+      </feDiffuseLighting>
+      <feSpecularLighting in="h" surfaceScale="10" specularConstant="2.0" specularExponent="44" lighting-color="#ffffff" result="s">
+        <feDistantLight azimuth="235" elevation="54" />
+      </feSpecularLighting>
+      <feComposite in="s" in2="SourceAlpha" operator="in" result="sc" />
+      <feComposite in="d" in2="SourceGraphic" operator="arithmetic" k1="1" result="td0" />
+      <feComposite in="td0" in2="SourceAlpha" operator="in" result="td" />
+      <feBlend in="td" in2="sc" mode="screen" result="lit" />
+    </filter>
+    <filter id="latex-lit-lg" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="h" />
+      <feDiffuseLighting in="h" surfaceScale="3.5" diffuseConstant="1.16" lighting-color="#fff8f3" result="d">
+        <feDistantLight azimuth="235" elevation="55" />
+      </feDiffuseLighting>
+      <feSpecularLighting in="h" surfaceScale="13" specularConstant="2.1" specularExponent="38" lighting-color="#ffffff" result="s">
+        <feDistantLight azimuth="235" elevation="54" />
+      </feSpecularLighting>
+      <feComposite in="s" in2="SourceAlpha" operator="in" result="sc" />
+      <feComposite in="d" in2="SourceGraphic" operator="arithmetic" k1="1" result="td0" />
+      <feComposite in="td0" in2="SourceAlpha" operator="in" result="td" />
+      <feBlend in="td" in2="sc" mode="screen" result="lit" />
+    </filter>
+    <filter id="latex-lit-sm-in" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="h0" />
+      <feComponentTransfer in="h0" result="h"><feFuncA type="table" tableValues="1 0" /></feComponentTransfer>
+      <feDiffuseLighting in="h" surfaceScale="3.0" diffuseConstant="1.08" lighting-color="#fff8f3" result="d">
+        <feDistantLight azimuth="235" elevation="55" />
+      </feDiffuseLighting>
+      <feSpecularLighting in="h" surfaceScale="8" specularConstant="1.5" specularExponent="36" lighting-color="#ffffff" result="s">
+        <feDistantLight azimuth="235" elevation="54" />
+      </feSpecularLighting>
+      <feComposite in="s" in2="SourceAlpha" operator="in" result="sc" />
+      <feComposite in="d" in2="SourceGraphic" operator="arithmetic" k1="1" result="td0" />
+      <feComposite in="td0" in2="SourceAlpha" operator="in" result="td" />
+      <feBlend in="td" in2="sc" mode="screen" result="lit" />
+    </filter>
+    <filter id="latex-lit-lg-in" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="h0" />
+      <feComponentTransfer in="h0" result="h"><feFuncA type="table" tableValues="1 0" /></feComponentTransfer>
+      <feDiffuseLighting in="h" surfaceScale="3.5" diffuseConstant="1.08" lighting-color="#fff8f3" result="d">
+        <feDistantLight azimuth="235" elevation="55" />
+      </feDiffuseLighting>
+      <feSpecularLighting in="h" surfaceScale="10" specularConstant="1.6" specularExponent="32" lighting-color="#ffffff" result="s">
+        <feDistantLight azimuth="235" elevation="54" />
+      </feSpecularLighting>
+      <feComposite in="s" in2="SourceAlpha" operator="in" result="sc" />
+      <feComposite in="d" in2="SourceGraphic" operator="arithmetic" k1="1" result="td0" />
+      <feComposite in="td0" in2="SourceAlpha" operator="in" result="td" />
+      <feBlend in="td" in2="sc" mode="screen" result="lit" />
+    </filter>
+  </defs>
+</svg>
+<div id="latex-ball" aria-hidden="true"></div>
+
+<div id="skin-switcher" role="group" aria-label="外观">
+  <button type="button" data-skin="soft">亲肤</button>
+  <button type="button" data-skin="latex" class="is-active">乳胶</button>
+  <button type="button" data-skin="glass">玻璃</button>
+</div>
+
+<div id="color-palette" role="group" aria-label="乳胶颜色">
+  <button type="button" class="color-swatch" data-theme="black" style="background:#1a1a1a" title="黑" aria-label="黑色"></button>
+  <button type="button" class="color-swatch is-active" data-theme="white" style="background:#f1f1f4" title="白" aria-label="白色"></button>
+  <button type="button" class="color-swatch" data-theme="blue" style="background:#6a9fd4" title="蓝" aria-label="蓝色"></button>
+  <button type="button" class="color-swatch" data-theme="orange" style="background:#e8894a" title="橙" aria-label="橙色"></button>
+</div>
+
 <div id="navbar"></div>
 <div id="content"></div>
 
-<script src="main.js"></script>
+<script src="skins/soft/soft.js?v=2"></script>
+<script src="skins/latex/latex.js?v=gloss-css-22"></script>
+<script src="skins/glass/glass.js?v=2"></script>
+<script src="ball.js?v=1"></script>
+<script src="skin.js?v=6"></script>
+<script src="main.js?v=layout-1"></script>
 <script src="pages/home.js"></script>
 <script src="pages/blog.js"></script>
 <script src="pages/portfolio.js"></script>
 <script src="pages/project.js"></script>
 <script src="pages/about.js"></script>
+</body>
+</html>

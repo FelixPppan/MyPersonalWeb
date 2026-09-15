@@ -1,0 +1,138 @@
+/* Always-on skin switcher UI */
+
+/* 黑球光标：三个外观共用，直接替换系统指针 */
+#latex-ball {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 26px;
+    height: 26px;
+    margin: -13px 0 0 -13px;
+    z-index: 200;
+    pointer-events: none;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate3d(-9999px, -9999px, 0);
+    will-change: transform, opacity;
+    background: radial-gradient(
+        circle at 32% 28%,
+        #5c5c5c 0%,
+        #1a1a1a 42%,
+        #050505 78%,
+        #000 100%
+    );
+    box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.28),
+        0 3px 8px rgba(0, 0, 0, 0.2),
+        inset 0 1px 2px rgba(255, 255, 255, 0.3),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.55);
+    transition: opacity 0.12s ease;
+}
+
+/* 深色外观下球要反过来，否则看不见 */
+html.theme-black #latex-ball {
+    background: radial-gradient(
+        circle at 32% 28%,
+        #ffffff 0%,
+        #eaeaea 42%,
+        #c6c6c6 78%,
+        #a8a8a8 100%
+    );
+    box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.4),
+        0 3px 8px rgba(0, 0, 0, 0.25),
+        inset 0 1px 2px rgba(255, 255, 255, 0.9),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.18);
+}
+
+html.has-pointer,
+html.has-pointer * {
+    cursor: none !important;
+}
+
+html.has-pointer #color-palette,
+html.has-pointer #color-palette *,
+html.has-pointer #skin-switcher,
+html.has-pointer #skin-switcher * {
+    cursor: pointer !important;
+}
+#skin-switcher {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 130;
+    display: flex;
+    gap: 0.4rem;
+    pointer-events: auto;
+}
+
+#skin-switcher button {
+    font-family: "Nunito", "Outfit", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    color: #3a3632;
+    background: rgba(255, 252, 248, 0.72);
+    box-shadow: 0 2px 10px rgba(80, 70, 60, 0.14);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+#skin-switcher button:hover {
+    transform: translateY(-1px);
+}
+
+#skin-switcher button.is-active {
+    background: #2a2624;
+    color: #f6f1eb;
+}
+
+html.theme-black #skin-switcher button {
+    background: rgba(40, 40, 42, 0.85);
+    color: #eceae6;
+}
+
+html.theme-black #skin-switcher button.is-active {
+    background: #f0ece6;
+    color: #1a1a1a;
+}
+
+html.has-pointer #skin-switcher,
+html.has-pointer #skin-switcher * {
+    cursor: pointer !important;
+}
+
+/* Color palette sits under skin switcher in latex mode */
+html[data-skin="latex"] #color-palette {
+    top: 3.4rem;
+}
+
+/* 亲肤的柔光膜只在亲肤外观下显示；色板只给乳胶/玻璃用 */
+html[data-skin="soft"] #color-palette {
+    display: none !important;
+}
+
+html[data-skin="latex"] #soft-light,
+html[data-skin="glass"] #soft-light {
+    display: none !important;
+}
+
+#soft-light,
+#latex-light {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+    display: block;
+}
+
+html[data-skin="soft"] #navbar,
+html[data-skin="soft"] #content {
+    filter: none !important;
+}
