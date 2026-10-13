@@ -1,0 +1,174 @@
+/*
+ * cursor-fx —— 光标效果引擎的样式,以及光标状态展示页的版式。
+ *
+ * 光标的观感照搬现有 #latex-ball,但改用类名而不是 id,
+ * 这样同一个页面上可以同时存在多份,互不干扰。
+ * 颜色一律走皮肤定义的 CSS 变量,切外观时自动跟着变。
+ */
+
+/* ===== 光标本体 ===== */
+
+.cfx {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+}
+
+/*
+ * 把液体当光标用的时候，外面套这一层：固定在视口原点，由 JS 平移到指针上。
+ * .cfx 自己是 absolute、坐标相对外层，所以套上之后液体的坐标就永远是「相对指针」的，
+ * 和展示页里「格子正中为原点」是同一个约定。
+ * z-index 比 #latex-ball(200) 高一层：交接的那一帧两种光标是同一颗球，
+ * 谁在上面都一样，但收尾时液体得压得住正在淡回来的球。
+ */
+.cfx-fixed {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    z-index: 201;
+    pointer-events: none;
+}
+
+.cfx-fixed .cfx {
+    opacity: 0;
+    transition: none;
+}
+
+/*
+ * 两个图层叠在同一个锚点上:
+ *   .cfx-shadow —— 只负责投影,必须留在 goo 之外。goo 会把 alpha 做陡峭阈值,
+ *                  而投影的 alpha 远低于阈值,留在里面会被整个吃掉。
+ *   .cfx-goo    —— 液体本体,被 goo 滤镜塑形,球与球之间才会长出颈。
+ */
+.cfx-shadow,
+.cfx-goo {
+    position: absolute;
+    left: -55px;
+    top: -55px;
+    width: 110px;
+    height: 110px;
+    pointer-events: none;
+}
+
+.cfx-shadow {
+    filter: blur(7px);
+    opacity: 0.28;
+    transform: translateY(8px);
+}
+
+.cfx-shadow .cfx-ball {
+    background: var(--cfx-shadow-ink, #000);
+}
+
+.cfx-ball {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 26px;
+    height: 26px;
+    margin: -13px 0 0 -13px;
+    border-radius: 50%;
+    will-change: transform;
+    transition: opacity 0.18s ease;
+    transform: translate3d(0, 0, 0) scale(1);
+}
+
+.cfx-goo .cfx-ball {
+    background: radial-gradient(
+        circle at 32% 28%,
+        var(--cfx-hi, #5a5a5a) 0%,
+        var(--cfx-mid, #1a1a1a) 42%,
+        var(--cfx-lo, #050505) 78%,
+        var(--cfx-ink, #000) 100%
+    );
+    /* 只保留内阴影:外阴影会被 goo 的阈值吃掉,交给 .cfx-shadow 承担 */
+    box-shadow:
+        inset 0 1px 2px rgba(255, 255, 255, 0.28),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.55);
+}
+
+/* 深色配色下把球反过来,和现有 #latex-ball 的处理一致 */
+/*
+ * 按下：外阴影收紧、内阴影加深。
+ * 数值对应 #latex-ball 的 html.is-pressing（10px/24px 收到 6px/14px，不透明度 .28→.32），
+ * 这里只是把外阴影改由 .cfx-shadow 这一层承担，所以换算成了它自己的 blur / translateY / opacity。
+ * 故意不加 transition —— 原实现里 box-shadow 就是直接切的，只有缩放走插值。
+ * 这个不同步是要展示出来的事实，不是漏掉的细节。
+ */
+.cfx.is-pressing .cfx-shadow {
+    filter: blur(4.5px);
+    opacity: 0.34;
+    transform: translateY(5px);
+}
+
+.cfx.is-pressing .cfx-goo .cfx-ball {
+    box-shadow:
+        inset 0 1px 2px rgba(255, 255, 255, 0.2),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.72);
+}
+
+/*
+ * cursor-embed —— 运行时那一半的样式。
+ * 上面是引擎的样式(从 cursor-fx.css 抽出来的那一段,球和液体的观感),
+ * 这里是包装、藏光标、以及几个开关。两份由 build.js 拼成一个文件。
+ */
+
+/*
+ * 壳:固定在视口原点,零尺寸,由 JS 平移到指针上。
+ * 里面的液体于是永远用「相对指针」的坐标 —— 和引擎的约定一致。
+ */
+.cfx-embed {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    will-change: transform;
+}
+
+.cfx-embed .cfx {
+    opacity: 1;
+}
+
+/* 不带投影的开关 */
+.cfx-embed-no-shadow .cfx-shadow {
+    display: none;
+}
+
+/*
+ * ── 藏系统光标 ──
+ *
+ * 只压在 html 和 body 上,**没有 `*`**。cursor 是继承属性,所以自己没声明过 cursor 的
+ * 元素会继承到 none(被藏掉),而自己声明过的元素用自己的值(照常显示,而且能被读到)。
+ *
+ * 本站那条 `html.has-pointer * { cursor: none !important }` 之所以在这里不能用:
+ * 它把每个元素都压成 none,于是 getComputedStyle(el).cursor 再也读不出任何东西 ——
+ * 藏光标这件事把「该不该变形」的唯一可靠来源掐掉了。买家不会给每个按钮补一条声明,
+ * 所以对外的这一份必须能自己读出意图。
+ *
+ * 声明过 cursor 的元素,由 JS 在指针第一次划到它身上时补一条行内 `cursor: none !important`
+ * (行内 !important 压过样式表 !important),并在销毁时把原值还回去。
+ * 我们没藏过的元素 = 我们画不出来的那些 = 系统光标自然留着,「让位」不用额外做什么。
+ */
+html.cfx-embed-on,
+html.cfx-embed-on body {
+    cursor: none !important;
+}
+
+/*
+ * 减弱动效:球的出现/消失不带过渡,形状本来就不做了(运行时那边读同一个开关)。
+ * 只碰 opacity 的过渡,**不碰 transform** —— 那个属性是运行时独占的。
+ */
+@media (prefers-reduced-motion: reduce) {
+    .cfx-embed .cfx,
+    .cfx-embed .cfx-ball {
+        transition: none;
+    }
+}

@@ -1,0 +1,80 @@
+cursor-embed — Commercial License
+Version 1.0.0
+
+Copyright (c) 2026 Guoxi Pan. All rights reserved.
+
+This is a commercial license, not an open-source license.
+
+────────────────────────────────────────────────────────────────────────────
+1. GRANT
+────────────────────────────────────────────────────────────────────────────
+
+The purchaser is granted a non-exclusive, non-transferable, perpetual license to:
+
+  (a) use this software in any number of projects, personal or commercial,
+      including work delivered to clients;
+
+  (b) modify the source code to suit those projects;
+
+  (c) compile, bundle or merge this software into their own products and
+      distribute those products, with no attribution required.
+
+────────────────────────────────────────────────────────────────────────────
+2. RESTRICTIONS
+────────────────────────────────────────────────────────────────────────────
+
+The purchaser may NOT:
+
+  (a) redistribute, resell, sublicense, gift or publicly publish this software,
+      or any substantial portion of it, in source form or as a library,
+      component, template, theme, starter kit or similar product;
+
+  (b) use this software to produce a product that is substantially the same as
+      this software and offer that product to others;
+
+  (c) publish the source code of this software in any repository, CDN, package
+      registry or forum from which others can obtain it.
+
+────────────────────────────────────────────────────────────────────────────
+3. NO WARRANTY
+────────────────────────────────────────────────────────────────────────────
+
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+────────────────────────────────────────────────────────────────────────────
+4. ONE LICENSE, ONE PURCHASER
+────────────────────────────────────────────────────────────────────────────
+
+This license is granted to the original purchaser. Transferring it to another
+party terminates it. Questions about these terms: panguoxipgx@gmail.com.
+
+────────────────────────────────────────────────────────────────────────────
+中文译文(仅供参考;如有歧义,以英文为准)
+────────────────────────────────────────────────────────────────────────────
+
+1. 许可授予
+   购买者获得一项非独占、不可转让、永久有效的许可,可以:
+   (a) 在任意数量的项目中使用本软件,包括个人项目和商业项目,也包括交付给客户的工作;
+   (b) 为这些项目修改本软件的源代码;
+   (c) 把本软件编译、打包、合并进自己的产品并对外发布,无需署名。
+
+2. 限制
+   购买者不得:
+   (a) 把本软件的全部或实质性部分,以源代码形式、或以组件、模板、主题、starter kit 或
+       类似产品的形式,再次分发、出售、转授权、赠送或公开发布;
+   (b) 用本软件制作一个与本软件实质相同的产品并对外提供;
+   (c) 把本软件的源代码公开在任何可被他人获取的仓库、CDN、包管理器或论坛上。
+
+3. 免责
+   本软件按「现状」提供,不附带任何明示或默示的担保,包括但不限于对适销性、特定用途
+   适用性和不侵权的担保。在任何情况下,作者均不对因本软件或本软件的使用或其他交易
+   所产生的任何索赔、损害或其他责任承担责任。
+
+4. 一份许可,一个购买者
+   本许可授予最初购买者。把它转让他人即告失效。条款有疑问,发邮件到
+   panguoxipgx@gmail.com。

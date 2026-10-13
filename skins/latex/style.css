@@ -464,7 +464,7 @@ html.is-pressing #latex-ball {
 }
 
 .card {
-    padding: 2rem;
+    padding: 3rem;
     border-radius: 58px 46px 60px 50px / 50px 60px 46px 58px;
     margin-bottom: 1.25rem;
     color: var(--ink);
@@ -757,7 +757,7 @@ iframe {
     }
 
     .card {
-        padding: 1.25rem;
+        padding: 1.875rem;
         border-radius: 28px;
     }
 

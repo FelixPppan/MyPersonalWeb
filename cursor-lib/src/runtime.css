@@ -1,0 +1,59 @@
+/*
+ * cursor-embed —— 运行时那一半的样式。
+ * 上面是引擎的样式(从 cursor-fx.css 抽出来的那一段,球和液体的观感),
+ * 这里是包装、藏光标、以及几个开关。两份由 build.js 拼成一个文件。
+ */
+
+/*
+ * 壳:固定在视口原点,零尺寸,由 JS 平移到指针上。
+ * 里面的液体于是永远用「相对指针」的坐标 —— 和引擎的约定一致。
+ */
+.cfx-embed {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    will-change: transform;
+}
+
+.cfx-embed .cfx {
+    opacity: 1;
+}
+
+/* 不带投影的开关 */
+.cfx-embed-no-shadow .cfx-shadow {
+    display: none;
+}
+
+/*
+ * ── 藏系统光标 ──
+ *
+ * 只压在 html 和 body 上,**没有 `*`**。cursor 是继承属性,所以自己没声明过 cursor 的
+ * 元素会继承到 none(被藏掉),而自己声明过的元素用自己的值(照常显示,而且能被读到)。
+ *
+ * 本站那条 `html.has-pointer * { cursor: none !important }` 之所以在这里不能用:
+ * 它把每个元素都压成 none,于是 getComputedStyle(el).cursor 再也读不出任何东西 ——
+ * 藏光标这件事把「该不该变形」的唯一可靠来源掐掉了。买家不会给每个按钮补一条声明,
+ * 所以对外的这一份必须能自己读出意图。
+ *
+ * 声明过 cursor 的元素,由 JS 在指针第一次划到它身上时补一条行内 `cursor: none !important`
+ * (行内 !important 压过样式表 !important),并在销毁时把原值还回去。
+ * 我们没藏过的元素 = 我们画不出来的那些 = 系统光标自然留着,「让位」不用额外做什么。
+ */
+html.cfx-embed-on,
+html.cfx-embed-on body {
+    cursor: none !important;
+}
+
+/*
+ * 减弱动效:球的出现/消失不带过渡,形状本来就不做了(运行时那边读同一个开关)。
+ * 只碰 opacity 的过渡,**不碰 transform** —— 那个属性是运行时独占的。
+ */
+@media (prefers-reduced-motion: reduce) {
+    .cfx-embed .cfx,
+    .cfx-embed .cfx-ball {
+        transition: none;
+    }
+}

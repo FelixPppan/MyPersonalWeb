@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>卖这套光标，去哪儿卖</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1a1a;
+    --paper:#f1f1f4;
+    --blue:#6a9fd4;
+    --orange:#e8894a;
+    --muted:#6b6c74;
+    --rule:#d6d7dd;
+    --track:#e4e5ea;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:Outfit,"Noto Sans SC",-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;
+    font-size:16.5px;
+    line-height:1.78;
+    letter-spacing:.005em;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:64px 28px 120px}
+
+  h1,h2,h3{font-family:"Noto Serif SC",Outfit,serif;font-weight:700;line-height:1.35;margin:0}
+  h1{font-size:clamp(1.9rem,4.6vw,2.9rem);letter-spacing:.01em}
+  h2{font-size:1.24rem;margin-bottom:.7em}
+  h3{font-size:1.02rem;font-family:Outfit,"Noto Sans SC",sans-serif;font-weight:600;margin-bottom:.4em}
+  p{margin:0 0 1.05em}
+  .lede{font-size:1.08rem;color:#3a3b42;max-width:62ch}
+
+  header .meta{font-size:.86rem;color:var(--muted);margin-top:1.1em}
+
+  section{margin-top:64px;padding-top:38px;border-top:1px solid var(--rule)}
+  section:first-of-type{border-top:none}
+
+  /* ---- 主图：一笔单，平台拿走多少 ---- */
+  .chart{margin:44px 0 0}
+  .chart h2{margin-bottom:.35em}
+  .basis{font-size:.88rem;color:var(--muted);margin-bottom:26px;max-width:64ch}
+
+  .rows{display:flex;flex-direction:column;gap:0}
+  .row{
+    display:grid;
+    grid-template-columns:minmax(128px,206px) 1fr 92px;
+    align-items:center;
+    gap:16px;
+    padding:11px 0;
+    border-bottom:1px solid #e5e6eb;
+  }
+  .row:first-child{border-top:1px solid #e5e6eb}
+  .name{font-size:.93rem;display:flex;align-items:center;gap:8px}
+  .pick{width:7px;height:7px;flex:none;background:var(--blue)}
+  .pick.empty{background:transparent}
+  .track{height:20px;background:var(--track);position:relative;overflow:hidden}
+  .fill{
+    position:absolute;inset:0 auto 0 0;
+    background:#9a9ba3;
+    width:0;
+    transition:width .9s cubic-bezier(.22,.9,.28,1);
+  }
+  .row.picked .fill{background:var(--blue)}
+  .value{font-size:.9rem;text-align:right;font-variant-numeric:tabular-nums;color:#2c2d33}
+  .fee{display:block;font-size:.79rem;color:var(--muted);font-variant-numeric:tabular-nums}
+  .tag{
+    font-size:.7rem;line-height:1.5;padding:0 5px;
+    border:1px solid var(--rule);color:var(--muted);
+    border-radius:2px;white-space:nowrap;
+  }
+  .tag.ok{color:#3d6b46;border-color:#bfd4c2}
+  .tag.half{color:#8a6a2e;border-color:#e0d0ab}
+  .legend{font-size:.84rem;color:var(--muted);margin-top:20px;max-width:66ch}
+  .legend b{color:#2c2d33;font-weight:500}
+
+  ul{padding-left:1.15em;margin:0 0 1.05em}
+  li{margin-bottom:.42em}
+  li::marker{color:var(--muted)}
+
+  code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:.87em;background:#e7e8ed;padding:1px 5px;border-radius:2px;
+  }
+
+  .callout{
+    border-left:3px solid var(--orange);
+    padding:2px 0 2px 20px;
+    margin:28px 0;
+    max-width:64ch;
+  }
+  .callout p:last-child{margin-bottom:0}
+
+  .verdict{
+    background:#1a1a1a;color:#f1f1f4;
+    padding:30px 32px;margin:36px 0 0;
+  }
+  .verdict h3{color:#fff}
+  .verdict p{color:#c9cacc;margin-bottom:.85em;max-width:60ch}
+  .verdict p:last-child{margin-bottom:0}
+  .verdict strong{color:#fff;font-weight:600}
+
+  footer{margin-top:76px;padding-top:30px;border-top:1px solid var(--rule);font-size:.86rem;color:var(--muted)}
+  footer h3{color:var(--ink);margin-bottom:.5em}
+  footer ul{margin-bottom:0}
+  footer a{color:#3a3b42;text-decoration:underline;text-underline-offset:2px}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+  @media (max-width:660px){
+    .wrap{padding:40px 20px 90px}
+    .row{grid-template-columns:1fr 74px;grid-template-areas:"n v" "t t";row-gap:7px}
+    .name{grid-area:n}.value{grid-area:v}.track-cell{grid-area:t}
+    section{margin-top:48px;padding-top:30px}
+    .verdict{padding:24px 22px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .fill{transition:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>卖代码这件事，「台子」其实是两个东西</h1>
+  <p class="lede">
+    一个负责收钱，一个负责让人路过。这两件事很少长在同一个地方：抽成最低的那批，一个人也不会路过；
+    真有开发者来逛的那个市场，现在要拿走一半。
+  </p>
+  <p class="meta">2026-09-19 整理 · 数字来源见页末，每条都标了我核到什么程度</p>
+</header>
+
+<section class="chart">
+  <h2>一笔 $20 的单，平台拿走多少</h2>
+  <p class="basis">
+    横条长度就是平台抽走的比例。按 $20 一单算，因为 Gumroad 和 Lemon Squeezy 都有一笔按次收的固定费
+    （$0.50），单价越低这一笔占比越重。
+  </p>
+
+  <div class="rows" id="rows">
+    <div class="row" data-pct="5">
+      <div class="name"><span class="pick empty"></span>Payhip 免费版<span class="tag half">二手</span></div>
+      <div class="track-cell"><div class="track"><div class="fill"></div></div></div>
+      <div class="value">$19.00<span class="fee">抽 5%</span></div>
+    </div>
+    <div class="row picked" data-pct="7.5">
+      <div class="name"><span class="pick"></span>Lemon Squeezy<span class="tag ok">已核</span></div>
+      <div class="track-cell"><div class="track"><div class="fill"></div></div></div>
+      <div class="value">$18.50<span class="fee">抽 5% + $0.50</span></div>
+    </div>
+    <div class="row picked" data-pct="12.5">
+      <div class="name"><span class="pick"></span>Gumroad 自己带客<span class="tag ok">已核</span></div>
+      <div class="track-cell"><div class="track"><div class="fill"></div></div></div>
+      <div class="value">$17.50<span class="fee">抽 10% + $0.50</span></div>
+    </div>
+    <div class="row" data-pct="30">
+      <div class="name"><span class="pick empty"></span>Gumroad 靠它导流<span class="tag ok">已核</span></div>
+      <div class="track-cell"><div class="track"><div class="fill"></div></div></div>
+      <div class="value">$14.00<span class="fee">抽 30%</span></div>
+    </div>
+    <div class="row" data-pct="50">
+      <div class="name"><span class="pick empty"></span>Envato / CodeCanyon<span class="tag ok">已核</span></div>
+      <div class="track-cell"><div class="track"><div class="fill"></div></div></div>
+      <div class="value">$10.00<span class="fee">统一抽 50%</span></div>
+    </div>
+  </div>
+
+  <p class="legend">
+    <b>蓝条</b>是我建议的起步选择。<b>已核</b>＝来自官方域名，或多个互相独立的来源说法一致；
+    <b>二手</b>＝只有单一二手来源，官方页我没能打开。Gumroad 那两行之外还有一笔支付通道费，
+    有二手来源说合计约 13%，官方算法我没核到。
+  </p>
+</section>
+
+<section>
+  <h2>海外这一侧：带流量的市场和只负责收钱的收银台</h2>
+
+  <p>
+    CodeCanyon（Envato）是唯一一个真有开发者在逛的代码市场，所以它也最贵：2026 年 7 月它取消了独家制，
+    同时把所有作者统一压到 <strong>50% 分成</strong>。而且它上面卖得动的是「买回来就能跑的整站模板和插件」，
+    一个光标引擎放进去没有类目可挂。<code>itch.io</code> 的分成友好得多，可它的访客是来找游戏的人，和你的东西不搭。
+  </p>
+  <p>
+    另一类完全不给你带人：Gumroad、Lemon Squeezy、Payhip。它们只做收钱、发货、处理税务和退款，
+    成交全靠你自己把人带过来。区别只在抽成和结算方式上：
+  </p>
+  <ul>
+    <li><strong>Lemon Squeezy</strong>（5% + $0.50）是 merchant of record，增值税这类事它替你扛，但要过审核才能开店。</li>
+    <li><strong>Gumroad</strong>（10% + $0.50）门槛最低，能提现到 PayPal（二手来源说每周五结算、$10 起提），
+      缺点是贵一档，而且你在它站内被推荐曝光的那部分成交要抽 30%。</li>
+    <li><strong>Payhip</strong>（5%）最便宜，但资料不如前两家好找。</li>
+  </ul>
+  <p>
+    结论：海外这一侧只做一个决定——挑一个收银台。流量不在这些平台里，在你能写清楚「这东西解决什么」的那个页面上。
+  </p>
+</section>
+
+<section>
+  <h2>国内这一侧：钱要能进支付宝和微信</h2>
+
+  <p>
+    国内买家不会为了买一个小工具去弄信用卡，所以海外收银台在这一侧基本作废，得换一套：
+  </p>
+  <ul>
+    <li><strong>面包多</strong>偏「个人开发者卖文件」，号称闪电结算，是这个场景里最对口的一个。</li>
+    <li><strong>爱发电</strong>偏订阅式赞助，适合你打算持续更新、按月收。</li>
+    <li><strong>知识星球</strong>本质是社群，不是卖文件的地方；有二手来源说它抽 20%，我没核到官方数字。</li>
+  </ul>
+  <div class="callout">
+    <p>
+      这三家的抽成和提现费我<strong>没能核实</strong>：这个环境打不开它们的页面，只能搜到标题。
+      所以上面那张表里没有它们——我不把没核到的数字写进对比表。具体费率你亲眼看一下官方定价页再定。
+    </p>
+  </div>
+  <p>
+    还有一类是国内专门的源码交易平台（互站网这类），以及走淘宝、闲鱼卖的。那一挂的行情是
+    「几百块一个整站源码」，按那个价位卖你做的东西是贱卖，而且虚拟商品的平台规则本身就容易踩线。
+    要用的话，把它当引流入口，别当主战场。
+  </p>
+</section>
+
+<section>
+  <h2>第三条路：不卖文件</h2>
+  <p>
+    前端 JS 只要发到买家手里就是公开的，压缩混淆挡不住认真的人。所以「卖一份代码收一次钱」这个模式，
+    护城河从来不在文件里，而在更新、文档和支持上。React Bits 就是这个活法：核心组件免费放在网上谁都能拿，
+    靠 Pro 会员那一层收钱——免费那层负责被看见，付费那层卖的是省时间和持续维护。
+  </p>
+  <p>
+    如果你不打算长期维护它，那这条路本来就不适合你，该走的是定制交付：卖你这个人，一次性做完，
+    复制不走，也就没人能拿它去网上散。这和你之前定的接单方向是同一条路。
+  </p>
+</section>
+
+<section>
+  <h2>挑台子之前，有个更要紧的事</h2>
+  <div class="callout">
+    <p>
+      现在这套光标还<strong>不能直接嵌进别人的站</strong>。它用 <code>cursor: none !important</code> 把系统光标藏掉，
+      而这个动作同时把 <code>hover.js</code> 里那条「读元素自己声明的 <code>cursor</code>」的兜底路径弄瞎了——
+      在第三方页面上，每个元素都会被读成「没有任何要求」。
+    </p>
+    <p>
+      在你自己的站上没暴露，是因为你的元素都显式写了 <code>--cursor</code>。这件事不解决，
+      你能卖的只有「我这套站」，不能是「一个能嵌进去的库」——而后者才是能在上面那些台子上架的东西。
+    </p>
+  </div>
+</section>
+
+<section>
+  <h2>所以第一步</h2>
+  <div class="verdict">
+    <h3>开一个海外收银台，把商品页放在你自己的站上</h3>
+    <p>
+      选 <strong>Gumroad</strong> 起步：门槛最低、能提现到 PayPal、今天就能上架，贵的那个 10% 在你还没有成交量的阶段
+      不是主要成本。等你确认了有人买、也愿意长期维护，再换到 Lemon Squeezy 省那 5%。
+    </p>
+    <p>
+      商品页就用你自己站上的展示页，它已经是一个能玩的演示了，那比任何文案都有说服力。
+    </p>
+    <p>
+      国内那一侧先不动。等第一笔海外成交真的发生，再决定要不要为它单独搭一套微信支付宝的收款。
+    </p>
+  </div>
+</section>
+
+<footer>
+  <h3>这些数字是从哪来的</h3>
+  <ul>
+    <li><a href="https://gumroad.com/pricing">Gumroad 官方定价页</a>（10% + 50¢ 直接销售，30% 走 Discover 内推）</li>
+    <li><a href="https://docs.lemonsqueezy.com/help/getting-started/fees">Lemon Squeezy 官方费率文档</a></li>
+    <li><a href="https://www.therepository.email/envato-ends-exclusive-author-model-moves-all-marketplace-sellers-to-flat-50-revenue-share">Envato 取消独家、统一 50% 分成的报道</a></li>
+    <li><a href="https://itch.io/docs/creators/payments">itch.io 收款与分成文档</a></li>
+    <li><a href="https://sellfy.com/blog/payhip-pricing/">Payhip 费率（二手来源）</a></li>
+    <li><a href="https://guide.afdian.com/faq/faq-for-creators">爱发电创作者常见问题</a>、<a href="https://doc.mbd.pub/untitled">面包多文档</a>、<a href="https://doc.zsxq.com/income-withdrawal-faq.html">知识星球收入与提现</a>（只核到存在，没核到费率）</li>
+    <li><a href="https://pro.reactbits.dev/">React Bits Pro</a>（免费核心 + Pro 会员这个模式的样子）</li>
+  </ul>
+</footer>
+
+</div>
+
+<script>
+  (function () {
+    var rows = document.querySelectorAll('#rows .row');
+    var max = 50; // Envato 那一行是满格，其余按比例
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function draw() {
+      rows.forEach(function (r, i) {
+        var pct = parseFloat(r.dataset.pct || '0');
+        var w = Math.max(2, (pct / max) * 100);
+        var fill = r.querySelector('.fill');
+        if (reduced) { fill.style.width = w + '%'; return; }
+        setTimeout(function () { fill.style.width = w + '%'; }, 90 + i * 70);
+      });
+    }
+    if (document.readyState === 'complete') draw();
+    else window.addEventListener('load', draw);
+  })();
+</script>
+</body>
+</html>

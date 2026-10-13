@@ -1,0 +1,629 @@
+/*
+ * cursor-fx —— 光标效果引擎的样式,以及光标状态展示页的版式。
+ *
+ * 光标的观感照搬现有 #latex-ball,但改用类名而不是 id,
+ * 这样同一个页面上可以同时存在多份,互不干扰。
+ * 颜色一律走皮肤定义的 CSS 变量,切外观时自动跟着变。
+ */
+
+/* ===== 光标本体 ===== */
+
+.cfx {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+}
+
+/*
+ * 把液体当光标用的时候，外面套这一层：固定在视口原点，由 JS 平移到指针上。
+ * .cfx 自己是 absolute、坐标相对外层，所以套上之后液体的坐标就永远是「相对指针」的，
+ * 和展示页里「格子正中为原点」是同一个约定。
+ * z-index 比 #latex-ball(200) 高一层：交接的那一帧两种光标是同一颗球，
+ * 谁在上面都一样，但收尾时液体得压得住正在淡回来的球。
+ */
+.cfx-fixed {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    z-index: 201;
+    pointer-events: none;
+}
+
+.cfx-fixed .cfx {
+    opacity: 0;
+    transition: none;
+}
+
+/*
+ * 两个图层叠在同一个锚点上:
+ *   .cfx-shadow —— 只负责投影,必须留在 goo 之外。goo 会把 alpha 做陡峭阈值,
+ *                  而投影的 alpha 远低于阈值,留在里面会被整个吃掉。
+ *   .cfx-goo    —— 液体本体,被 goo 滤镜塑形,球与球之间才会长出颈。
+ */
+.cfx-shadow,
+.cfx-goo {
+    position: absolute;
+    left: -55px;
+    top: -55px;
+    width: 110px;
+    height: 110px;
+    pointer-events: none;
+}
+
+.cfx-shadow {
+    filter: blur(7px);
+    opacity: 0.28;
+    transform: translateY(8px);
+}
+
+.cfx-shadow .cfx-ball {
+    background: #000;
+}
+
+.cfx-ball {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 26px;
+    height: 26px;
+    margin: -13px 0 0 -13px;
+    border-radius: 50%;
+    will-change: transform;
+    transition: opacity 0.18s ease;
+    transform: translate3d(0, 0, 0) scale(1);
+}
+
+.cfx-goo .cfx-ball {
+    background: radial-gradient(
+        circle at 32% 28%,
+        #5a5a5a 0%,
+        #1a1a1a 42%,
+        #050505 78%,
+        #000 100%
+    );
+    /* 只保留内阴影:外阴影会被 goo 的阈值吃掉,交给 .cfx-shadow 承担 */
+    box-shadow:
+        inset 0 1px 2px rgba(255, 255, 255, 0.28),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.55);
+}
+
+/* 深色配色下把球反过来,和现有 #latex-ball 的处理一致 */
+html.theme-black .cfx-goo .cfx-ball {
+    background: radial-gradient(
+        circle at 32% 28%,
+        #ffffff 0%,
+        #eaeaea 42%,
+        #c6c6c6 78%,
+        #a8a8a8 100%
+    );
+    box-shadow:
+        inset 0 1px 2px rgba(255, 255, 255, 0.9),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.18);
+}
+
+html.theme-black .cfx-shadow {
+    opacity: 0.18;
+}
+
+/*
+ * 按下：外阴影收紧、内阴影加深。
+ * 数值对应 #latex-ball 的 html.is-pressing（10px/24px 收到 6px/14px，不透明度 .28→.32），
+ * 这里只是把外阴影改由 .cfx-shadow 这一层承担，所以换算成了它自己的 blur / translateY / opacity。
+ * 故意不加 transition —— 原实现里 box-shadow 就是直接切的，只有缩放走插值。
+ * 这个不同步是要展示出来的事实，不是漏掉的细节。
+ */
+.cfx.is-pressing .cfx-shadow {
+    filter: blur(4.5px);
+    opacity: 0.34;
+    transform: translateY(5px);
+}
+
+.cfx.is-pressing .cfx-goo .cfx-ball {
+    box-shadow:
+        inset 0 1px 2px rgba(255, 255, 255, 0.2),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.72);
+}
+
+html.theme-black .cfx.is-pressing .cfx-shadow {
+    opacity: 0.24;
+}
+
+html.theme-black .cfx.is-pressing .cfx-goo .cfx-ball {
+    box-shadow:
+        inset 0 1px 2px rgba(255, 255, 255, 0.82),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.26);
+}
+
+/* ===== 展示页版式 ===== */
+
+.cx-intro {
+    max-width: 60ch;
+}
+
+.cx-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
+    gap: 1rem;
+    margin: 1.4rem 0;
+}
+
+.cx-cell {
+    border-radius: 18px;
+    padding: 0.85rem 0.9rem 0.7rem;
+    background: rgba(127, 127, 127, 0.07);
+    box-shadow: inset 0 0 0 1px rgba(127, 127, 127, 0.16);
+}
+
+/*
+ * 跟着面板一起长出来。在三个皮肤的 style.css 里都加一遍 .cx-cell 太散，
+ * 而且那边本来就有一份重复的 #latex-ball 死代码；这里自己定义一份，
+ * 时序抄 panel-rise，视觉上和卡片一致。
+ * 延迟由 main.js 的 applyRevealOrder 统一排。
+ */
+.cx-cell {
+    animation: cx-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes cx-rise {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cx-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin-bottom: 0.6rem;
+}
+
+.cx-name {
+    font-family: var(--font-display, "Outfit", sans-serif);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--ink, #17161a);
+}
+
+.cx-en {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--ink-mute, #7c7a82);
+}
+
+.cx-stage {
+    position: relative;
+    height: 168px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(127, 127, 127, 0.07);
+    box-shadow: inset 0 0 0 1px rgba(127, 127, 127, 0.1);
+}
+
+/* .cfx 是 0×0 的锚点，格子里的每份实例都以舞台正中为原点 */
+.cx-stage .cfx {
+    left: 50%;
+    top: 50%;
+}
+
+.cx-chip {
+    flex: none;
+    padding: 0.1rem 0.42rem;
+    border-radius: 999px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--ink-mute, #7c7a82);
+    background: rgba(127, 127, 127, 0.14);
+}
+
+.cx-chip.is-live {
+    color: #2f6b4f;
+    background: rgba(70, 150, 110, 0.16);
+}
+
+html.theme-black .cx-chip.is-live {
+    color: #9fdcbe;
+    background: rgba(110, 200, 160, 0.16);
+}
+
+.cx-pending li code {
+    font-size: 0.78rem;
+    color: var(--ink-soft, #4a484f);
+}
+
+.cx-pending .cx-next {
+    color: var(--ink, #17161a);
+    font-weight: 600;
+}
+
+.cx-note {
+    margin: 0.6rem 0 0;
+    font-size: 0.76rem;
+    line-height: 1.45;
+    color: var(--ink-mute, #7c7a82);
+}
+
+/*
+ * ==== 试玩区 ====
+ *
+ * 里面每一块都是真元素(button / a[href] / [disabled] / .cursor-not-allowed),
+ * 所以这里只管摆放,不管「能不能点」—— 那件事归 skin-ui.css 里那几条 --cursor 声明。
+ * 在这一页重复一遍意图,试玩区就会和站上真实的行为脱钩,而那正是它唯一的意义。
+ */
+.cx-play-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0.9rem 0 1rem;
+}
+
+/* .btn 自带 margin-top / margin-right(站上按钮是并排的),这里已经用 gap 排了 */
+.cx-play-row .btn {
+    margin: 0 !important;
+}
+
+.cx-play-plain {
+    display: inline-block;
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--ink-mute, #7c7a82);
+    background: rgba(127, 127, 127, 0.1);
+    border: 1px dashed rgba(127, 127, 127, 0.5);
+}
+
+/*
+ * 试玩区那个小窗口。它是「一块可以被缩放的边/角」——四个把手各自标了 data-resize,
+ * 而且是真能改尺寸的,不是示意图(缩放逻辑见 pages/cursor.js 的 mountWindowResize)。
+ *
+ * 为什么做成一个窗口的样子:这一条说的本来就是「拖窗口的边改尺寸」,而浏览器里
+ * 缩放不了真的窗口。做成一块能看见标题栏、能看见把手在哪的东西,至少让「按住哪、
+ * 为什么按住」是自明的;形状对不对,指针放上去就知道。
+ *
+ * 窗口里刻意放了一段正文(而不是只写一行字):那正是文本规则最需要当心的地方 ——
+ * 「缩放边上的元素里的段落」不能变回 I 形,和「链接里的段落」是同一个坑,靠的是
+ * skin-ui.css 那条 :not() 排除链里也排掉了这四个 data-resize 的值。
+ *
+ * transform / width / height 由缩放逻辑写;这里只给拖起来时的一点反馈(影子散开),
+ * 和按下缩放是同一路货色 —— 形状之外的地方可以自己说「正在被缩放」。
+ */
+.cx-win {
+    position: relative;
+    width: min(100%, 30rem);
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(127, 127, 127, 0.1);
+    border: 1px solid rgba(127, 127, 127, 0.35);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+    font-size: 0.86rem;
+    line-height: 1.5;
+    color: var(--ink-mute, #7c7a82);
+    /* 缩放时每帧都在改 width/height/transform,别让浏览器给它们加过渡 */
+    will-change: width, height, transform;
+    transition: box-shadow 160ms ease;
+    /* 拖的时候别把里面的字选中 */
+    user-select: none;
+}
+
+/* 缩起来:影子散开一点。这一层是「正在被缩放」的即时反馈,和液体的形状是两回事 */
+.cx-win.is-resizing {
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+}
+
+/*
+ * 能缩放的窗口:初始尺寸写死,不然「改尺寸」这件事没有起点(布局给的是自适应宽度,
+ * 拖起来会先跳一下)。高度也给死,里面的文字用 overflow 收住 —— 缩到最小的时候
+ * 溢出来的话,那就不像一块面板了。
+ */
+.cx-win-resize {
+    width: min(100%, 22rem);
+    height: 9rem;
+}
+
+.cx-win-resize .cx-win-body {
+    overflow: hidden;
+}
+
+.cx-win-resize .cx-win-body .cx-play-text {
+    /* 这里是**面板里的**正文,不是试玩用的文本框:不要虚线框 */
+    background: none;
+}
+
+/*
+ * 四个把手。它们是**铺在边/角上的条**,不是图标:真窗口的缩放热点也是这么回事 ——
+ * 一条窄带,不在上面画东西。所以背景透明、不占视觉,但必须**能命中**,
+ * 也就是不能 pointer-events: none。
+ *
+ * 宽 10px 而不是 4px:细了指针很难稳稳停在上面(这条状态本来就要「按住」,失手
+ * 就等于没试到)。角上给 16px,因为它要同时兼顾两条边。
+ *
+ * touch-action: none —— 触摸设备上拖把手时不要顺手把页面滚起来。
+ */
+.cx-grip {
+    position: absolute;
+    touch-action: none;
+}
+
+.cx-grip-e {
+    top: 12px;
+    right: 0;
+    bottom: 12px;
+    width: 10px;
+}
+
+.cx-grip-s {
+    left: 12px;
+    right: 12px;
+    bottom: 0;
+    height: 10px;
+}
+
+.cx-grip-se {
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+}
+
+/* 左上角压在标题栏上 —— 真窗口的左上角也是这样 */
+.cx-grip-nw {
+    top: 0;
+    left: 0;
+    width: 16px;
+    height: 16px;
+}
+
+/*
+ * 「我们画不出来,所以交还原版鼠标」那几块。形状上刻意**不**做成虚线框:虚线框在
+ * 这一页一直是「一块声明了 --cursor 的地方」的统一记号,而这几块要说的恰恰是
+ * 「这块和别的不一样 —— 我们在这儿没有形状」。改成实线的灰底,和别的行分开。
+ *
+ * 声明在样式表里而不是写在 style 属性上:和别的宿主同一条规矩 —— 意图和它的
+ * 样式放在一起,看一眼就知道这块为什么变形(或者为什么不变形)。
+ * 值都在标准光标表里,但引擎没有对应的采样函数,hover.js 认不到,于是走让位那条路。
+ */
+.cx-hand {
+    display: inline-block;
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--ink-mute, #7c7a82);
+    background: rgba(127, 127, 127, 0.16);
+    border: 1px solid rgba(127, 127, 127, 0.45);
+}
+
+/*
+ * 这四个值是**现在**没被认领的那几个的例子(整张表的账见展示页那段文案):
+ * crosshair / context-menu / help / wait。以前这里站着的是 zoom-in —— 它现在有形状了,
+ * 搬到上面「放大缩小」那一组去了。所以这几条不是「永远画不出来」的名单,
+ * 是「此刻还没有形状」的名单:哪天给其中一个做了采样函数,对应那条就删掉、搬上去。
+ */
+.cx-hand-crosshair { --cursor: crosshair; }
+.cx-hand-menu { --cursor: context-menu; }
+.cx-hand-help { --cursor: help; }
+.cx-hand-wait { --cursor: wait; }
+
+/*
+ * 「抓取」和「放大缩小」的试玩宿主。和别的宿主一样是虚线框 —— 它们同样是
+ * 「一块声明了 --cursor 的地方」,只是值写的是 data-* ,声明在 skin-ui.css 里
+ * (和 data-resize 同一处,那里才是这些值的家;这里只管长什么样)。
+ *
+ * 做成卡片而不是一条色块:抓取那一块要有「抓哪」这件事,所以左边有个握把记号;
+ * 缩放那一块要一眼看出是「推近/拉远」,所以是两格并排。
+ */
+.cx-drag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+    font-size: 0.86rem;
+    background: rgba(127, 127, 127, 0.1);
+    border: 1px dashed rgba(127, 127, 127, 0.5);
+}
+
+/*
+ * 握把只是个记号,不单独命中 —— 指针落在它上面和落在这块卡片上应该是同一件事
+ * (都是「这里能拖」),分成两个宿主只会让手感变成两块。
+ */
+.cx-drag-grip {
+    font-size: 1rem;
+    line-height: 1;
+    color: rgba(127, 127, 127, 0.9);
+    pointer-events: none;
+}
+
+.cx-drag-label { font-weight: 700; color: var(--ink-mute, #7c7a82); }
+
+/* 那行 data-* 说明是给读者看的注解,不是这块东西的一部分,所以也跟着让开命中 */
+.cx-drag-sub,
+.cx-zoom-sub {
+    font-size: 0.76rem;
+    color: rgba(127, 127, 127, 0.85);
+    pointer-events: none;
+}
+
+.cx-zoom {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 14px;
+    background: rgba(127, 127, 127, 0.1);
+    border: 1px dashed rgba(127, 127, 127, 0.5);
+}
+
+.cx-zoom-label {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--ink-mute, #7c7a82);
+}
+
+.cx-win-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(127, 127, 127, 0.14);
+    border-bottom: 1px solid rgba(127, 127, 127, 0.25);
+}
+
+/*
+ * 标题栏同时是窗口的**移动把手**,所以它标的是 data-drag="move"(抓起来的形态
+ * 就是「点下去那一摊」)。这一条只管视觉:把手要看着像一条能抓的带子,
+ * 所以底色比标题栏默认再重一点,并且里面那几个装饰性元素不吃命中 ——
+ * 圆点和标题都只是画在上面的东西,指针落在哪一颗上都该是「这条带子」。
+ *
+ * 角上的 data-resize="nw" 那个把手压在它左上角,那是另一个宿主:
+ * 同一根元素上两个值,`!important` 那条(缩放)按设计赢 —— 这是故意的,
+ * 真窗口的左上角也是「先缩放、再移动」。
+ */
+.cx-win-bar[data-drag="move"] {
+    background: rgba(127, 127, 127, 0.22);
+    border-radius: 10px 10px 0 0;
+}
+
+.cx-win-bar[data-drag="move"] .cx-win-dots,
+.cx-win-bar[data-drag="move"] .cx-win-title {
+    pointer-events: none;
+}
+
+.cx-win-dots {
+    display: inline-flex;
+    gap: 0.3rem;
+}
+
+.cx-win-dots i {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: rgba(127, 127, 127, 0.45);
+}
+
+.cx-win-title {
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.cx-win-body {
+    padding: 0.75rem 1rem;
+}
+
+.cx-win-body .cx-play-text {
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+}
+
+/*
+ * 文本那两个宿主。和上面那块标了 .cursor-not-allowed 的虚线框是同一族的视觉,
+ * 免得读者以为是漏了样式 —— 它们同样只是「一块声明了 --cursor 的地方」。
+ * 刻意不写成 .btn 那种样子:文本状态要的是一块能读/能打字的区域。
+ */
+.cx-play-text,
+.cx-play-input {
+    display: block;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    font-family: inherit;
+    color: var(--ink-mute, #7c7a82);
+    background: rgba(127, 127, 127, 0.1);
+    border: 1px dashed rgba(127, 127, 127, 0.5);
+}
+
+.cx-play-text { max-width: 44ch; }
+.cx-play-input { width: 22ch; }
+.cx-play-input::placeholder { color: rgba(127, 127, 127, 0.75); }
+
+/* 包在链接里的那个段落:让整块都可点,但看起来仍然是一段正文 */
+.cx-play-linkcard {
+    display: block;
+    max-width: 44ch;
+    text-decoration: none;
+}
+
+.cx-play h2 {
+    font-size: 0.95rem;
+    margin: 0 0 0.5rem;
+}
+
+.cx-play .cx-note {
+    max-width: 72ch;
+}
+
+.cx-pending {
+    margin-top: 1.6rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(127, 127, 127, 0.22);
+}
+
+.cx-pending h2 {
+    font-size: 0.95rem;
+    margin: 0 0 0.5rem;
+}
+
+.cx-pending h3 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin: 1rem 0 0.3rem;
+    color: var(--ink-soft, #4a484f);
+}
+
+.cx-pending h3:first-of-type {
+    margin-top: 0;
+}
+
+.cx-pending ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    color: var(--ink-mute, #7c7a82);
+}
+
+/*
+ * 减弱动效:液体这套东西自己带的两处过渡收掉。
+ *
+ *   .cfx            淡入淡出(.cfx 和 .cfx-goo .cfx-ball 各有一条 0.18s)
+ *   .cx-cell        展示页格子的入场(只有展示页有)
+ *
+ * 这里写的是全域的 `.cfx`,不是展示页里的 `.cx-stage .cfx`:活的那一层
+ * (createLayer 挂上去的)在减弱动效下根本不会出现,但它没出现之前也没人保证
+ * ——收过渡这件事不该依赖「它一定不出现」。格子里的同样的元素也被这条盖住。
+ *
+ * 真正在动的形状不是 CSS 的事:那是 cursor-fx.js 每帧画的 SVG,靠的是
+ * hover.js / loading.js **整个不进状态**(见那两个文件里的 reduceMotion),
+ * 不是这里少一条过渡。
+ */
+@media (prefers-reduced-motion: reduce) {
+    .cfx {
+        transition: none;
+    }
+
+    .cx-cell {
+        animation: none;
+    }
+}

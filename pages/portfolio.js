@@ -82,6 +82,18 @@ const projects = [
     },
 ];
 
+/*
+ * 卡片是 `<a href>`，不是挂 onclick 的 `<div>`。
+ *
+ * 理由和导航那条一模一样：整块可点的东西如果不是链接，键盘就够不着它，
+ * Tab 顺序里没有它、Enter 也按不动 —— 「作品集里每一张卡都点不进去」。
+ * 换成链接之后聚焦和 Enter 都是白给的，onclick 也就不需要了：href 写进去的
+ * 哈希值和 go('project?id=N') 写的是同一个，hashchange 那条路会把它渲染出来
+ * （renderProject 自己从 location.hash 里读 id，不靠谁先设好一个变量）。
+ *
+ * 代价只有 UA 给链接加的下划线和颜色，在 skin-ui.css 的 `.portfolio-item`
+ * 里补掉了 —— 那一份是三个外观共用的，不用三个样式表各写一遍。
+ */
 window.renderPortfolio = function () {
     document.getElementById("content").innerHTML = `
     <div class="card">
@@ -90,7 +102,7 @@ window.renderPortfolio = function () {
     </div>
     <div class="portfolio-grid">
       ${projects.map(p => `
-        <div class="portfolio-item" onclick="go('project?id=${p.id}')">
+        <a class="portfolio-item" href="#/project?id=${p.id}">
           <img src="${p.thumb}" alt="${p.titleEn}" onerror="this.src='https://picsum.photos/300/180?random=${p.id}'">
           <div class="portfolio-info">
             <h3>${p.titleZh}</h3>
@@ -98,7 +110,7 @@ window.renderPortfolio = function () {
             <p class="p-tech">${p.techZh}</p>
             <p class="p-tech-en">${p.techEn}</p>
           </div>
-        </div>
+        </a>
       `).join("")}
     </div>
   `;

@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cursor-embed —— 一颗会按元素变形状的液体光标</title>
+
+<!--
+    这两行就是全部要装的东西。这一页自己用的也是这两行,
+    没有构建步骤、没有别的依赖 —— 所以你现在看到的,就是买家装完之后看到的。
+-->
+<link rel="stylesheet" href="cursor-embed.css">
+<script src="cursor-embed.js"></script>
+
+<style>
+/*
+    这一页的样式和光标库无关,只为把东西摆清楚。
+    底色是冷的纸灰,不是暖米色:球是黑的,纸越干净它越准。
+    全页只有一处彩色 —— 记号点、选中的色块、滑块 —— 而它是跟着球的颜色走的。
+    也就是说:你不改颜色的时候,这一页是黑白的。
+*/
+:root {
+    color-scheme: light;
+    --paper: #f2f1ee;
+    --paper-2: #e8e7e2;
+    --ink: #141414;
+    --soft: rgba(20, 20, 20, .62);
+    --faint: rgba(20, 20, 20, .40);
+    --rule: rgba(20, 20, 20, .15);
+    --hard: rgba(20, 20, 20, .34);
+    --accent: #141414;
+    --sans: "Helvetica Neue", Helvetica, Arial, system-ui, -apple-system, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --gut: 32px;
+    --measure: 1160px;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 17px/1.62 var(--sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+.wrap {
+    max-width: var(--measure);
+    margin: 0 auto;
+    padding: 0 var(--gut);
+}
+
+/* ── 页眉 ── */
+
+.mast { border-bottom: 1px solid var(--rule); }
+
+.mast .wrap {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 24px;
+    padding-top: 18px;
+    padding-bottom: 16px;
+}
+
+.name {
+    font: 600 14.5px/1 var(--mono);
+    letter-spacing: -.015em;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+/* 记号点:全页那一处彩色。它跟着球的颜色走 */
+.name::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex: none;
+}
+
+.name .ver { color: var(--faint); font-weight: 400; }
+
+.mast nav { display: flex; gap: 20px; font-size: 14px; }
+
+.mast nav a {
+    color: var(--soft);
+    text-decoration: none;
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+}
+.mast nav a:hover { color: var(--ink); border-bottom-color: var(--hard); }
+
+/* ── 抬头 ── */
+
+.hero .wrap { padding-top: 64px; padding-bottom: 44px; }
+
+h1 {
+    margin: 0 0 20px;
+    font-size: clamp(28px, 4.2vw, 45px);
+    line-height: 1.1;
+    letter-spacing: -.024em;
+    font-weight: 600;
+    max-width: 21ch;
+}
+
+.lede { margin: 0; max-width: 62ch; color: var(--soft); }
+.lede strong { color: var(--ink); font-weight: 600; }
+
+/* ── 试玩带 ── */
+
+/* 下边不再画一条:紧接着的那个 section 自己有 border-top,画两条会叠成 2px */
+.band {
+    border-top: 1px solid var(--rule);
+    background: var(--paper-2);
+}
+
+.band .wrap { padding-top: 40px; padding-bottom: 40px; }
+
+.band-note {
+    font-size: 14px;
+    color: var(--faint);
+    margin: 0 0 22px;
+    max-width: none;
+}
+
+.field {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(146px, 1fr));
+    gap: 12px;
+}
+
+/*
+    每格是一个真控件或者一块声明了 cursor 的元素 —— 指针划过去,读到的就是它自己的值。
+    格子的样式故意克制:动的是球,不是格子。
+*/
+.tile {
+    height: 104px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--paper);
+    font: inherit;
+    color: inherit;
+    font-size: 15px;
+    text-align: center;
+    padding: 8px;
+}
+
+.tile .k {
+    font: 400 12px/1 var(--mono);
+    color: var(--faint);
+    letter-spacing: -.01em;
+}
+
+a.tile { text-decoration: none; }
+a.tile:hover, button.tile:hover { border-color: var(--hard); }
+
+/* 真控件摆进来的时候,把浏览器自带的皮扒掉,免得和纸面打架 */
+.tile input[type="range"] { width: 78%; accent-color: var(--accent); }
+.tile input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--accent); }
+.tile input[type="text"] {
+    width: 82%;
+    border: 0;
+    border-bottom: 1px solid var(--hard);
+    background: none;
+    font: inherit;
+    font-size: 15px;
+    color: inherit;
+    text-align: center;
+    padding: 3px 0;
+    border-radius: 0;
+}
+.tile input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* ── 版块 ── */
+
+/*
+    每个 section 顶上一根发丝线,把版块切开。
+    抬头那一段不是 section(它里面还套着试玩带),它的内边距在上面的「抬头」那条
+    规则里 —— 这里**不要**再写一遍 .hero .wrap:同一个选择器写两次,后写的那条
+    会把 .band .wrap 一起吃掉(特异度相同,谁在后面谁赢),试玩带的内边距就悄悄变了。
+*/
+section { border-top: 1px solid var(--rule); }
+section .wrap { padding-top: 68px; padding-bottom: 68px; }
+
+h2 {
+    margin: 0 0 14px;
+    font-size: 21px;
+    letter-spacing: -.012em;
+    font-weight: 600;
+}
+
+h3 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -.005em;
+}
+
+.sub { margin: 0 0 32px; max-width: 64ch; color: var(--soft); }
+
+.cols { display: grid; grid-template-columns: 1.15fr 1fr; gap: 48px; align-items: start; }
+.cols.wide-left { grid-template-columns: 1.6fr 1fr; }
+
+/* ── 代码 ── */
+
+pre {
+    margin: 0;
+    padding: 20px 22px;
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    overflow-x: auto;
+    font: 13px/1.66 var(--mono);
+    letter-spacing: -.01em;
+    tab-size: 2;
+}
+
+code { font: inherit; }
+p code, li code, dt code { font: 13.5px/1 var(--mono); background: var(--paper-2); padding: 2px 5px; border-radius: 2px; }
+
+.codeblock { position: relative; }
+.codeblock .tools { display: flex; justify-content: flex-end; margin-top: 10px; }
+
+button.ghost {
+    font: 400 13px/1 var(--sans);
+    color: var(--soft);
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 7px 12px;
+    cursor: pointer;
+}
+button.ghost:hover { color: var(--ink); border-color: var(--hard); }
+button.ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── 形状册 ── */
+
+.cat {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.cell {
+    background: var(--paper);
+    min-height: 132px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 16px;
+}
+.cell.dim { background: var(--paper-2); }
+
+.cell .val { font: 400 13px/1.3 var(--mono); letter-spacing: -.01em; }
+.cell .say { font-size: 13.5px; color: var(--soft); line-height: 1.45; }
+
+.handover-note { margin: 34px 0 16px; font-size: 15px; color: var(--soft); max-width: 64ch; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.chip {
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 9px 13px;
+    font: 400 12.5px/1 var(--mono);
+    letter-spacing: -.01em;
+    background: var(--paper-2);
+}
+
+/* ── 旋钮 ── */
+
+.knobs { display: grid; gap: 26px; }
+
+.knob { display: grid; gap: 9px; }
+
+.knob .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.knob .label { font-size: 15px; }
+.knob .read { font: 400 13px/1 var(--mono); color: var(--soft); }
+
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 22px;
+    background: none;
+    cursor: pointer;
+    margin: 0;
+}
+input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--hard); border-radius: 2px; }
+input[type="range"]::-moz-range-track { height: 2px; background: var(--hard); border-radius: 2px; }
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: -6.5px;
+    border: 0;
+}
+input[type="range"]::-moz-range-thumb { width: 15px; height: 15px; border: 0; border-radius: 50%; background: var(--accent); }
+input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.swatches { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+
+.sw {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--rule);
+    padding: 0;
+    cursor: pointer;
+    background: #000;
+}
+/* 出厂那颗:带高光的黑球,和真球同一个渐变 */
+.sw[data-color=""] {
+    background: radial-gradient(circle at 34% 30%, #5a5a5a 0%, #1a1a1a 42%, #050505 78%, #000 100%);
+}
+.sw[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--accent); }
+.sw:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.sw-pick {
+    width: 30px; height: 30px;
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+}
+
+/* ── 开关 ── */
+
+.switches { display: grid; gap: 14px; margin-top: 4px; }
+
+.switch { display: flex; align-items: center; gap: 10px; font-size: 15px; cursor: pointer; }
+.switch input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+/* ── 接口表 ── */
+
+.api { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; }
+
+.api .row {
+    background: var(--paper);
+    display: grid;
+    grid-template-columns: minmax(0, 22ch) minmax(0, 1fr);
+    gap: 28px;
+    padding: 15px 18px;
+}
+
+.api .sig { font: 400 13px/1.5 var(--mono); letter-spacing: -.01em; }
+.api .doc { font-size: 14.5px; color: var(--soft); line-height: 1.55; }
+.api .doc b { color: var(--ink); font-weight: 600; }
+
+/* ── 收尾 ── */
+
+.limits { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; max-width: 72ch; }
+.limits li { padding-left: 22px; position: relative; color: var(--soft); font-size: 15.5px; }
+.limits li::before {
+    content: "";
+    position: absolute;
+    left: 3px; top: .62em;
+    width: 6px; height: 1px;
+    background: var(--hard);
+}
+.limits li b { color: var(--ink); font-weight: 600; }
+
+.colophon { border-top: 1px solid var(--rule); }
+.colophon .wrap {
+    padding-top: 30px; padding-bottom: 46px;
+    display: flex; justify-content: space-between; gap: 24px;
+    font-size: 13.5px; color: var(--faint);
+    flex-wrap: wrap;
+}
+
+a { color: inherit; }
+
+/* 键盘焦点:这一页的球是靠鼠标的,键盘路径得留着 */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 800px) {
+    :root { --gut: 20px; }
+    .cols, .cols.wide-left { grid-template-columns: 1fr; gap: 32px; }
+    .api .row { grid-template-columns: 1fr; gap: 6px; }
+    section .wrap, .hero .wrap { padding-top: 46px; padding-bottom: 46px; }
+    /* 试玩带再单写一条压回去 —— 和上面那条特异度相同,靠位置赢 */
+    .band .wrap { padding-top: 30px; padding-bottom: 30px; }
+    .mast nav { gap: 14px; }
+    .name, .mast nav { font-size: 13px; }
+}
+</style>
+</head>
+
+<body>
+
+<header class="mast">
+    <div class="wrap">
+        <div class="name">cursor-embed <span class="ver">1.0.0</span></div>
+        <nav>
+            <a href="#install">装进去</a>
+            <a href="#shapes">形状</a>
+            <a href="#tune">可以改的</a>
+            <a href="#api">接口</a>
+        </nav>
+    </div>
+</header>
+
+<div class="hero">
+    <div class="wrap">
+        <h1>一颗会按元素变形状的液体光标。</h1>
+        <p class="lede">把它放进页面,指针划过什么,它就长成什么 —— 按钮上摊成一坨、输入框里牵成一丝、拖拽把手上拉成一条。
+            <strong>这一页自己就在用它</strong>,下面整条带子都是活的。全页装了 <strong>两行</strong>,没有一行 JS。</p>
+    </div>
+
+    <div class="band">
+        <div class="wrap">
+            <p class="band-note">把球划过去。每一格都是一个真控件,或者一块自己声明了 <code>cursor</code> 的元素 —— 库里读的就是它自己那个值。</p>
+
+            <div class="field">
+                <a class="tile" href="#install">一个链接<span class="k">a[href]</span></a>
+                <button class="tile" type="button">一个按钮<span class="k">button</span></button>
+                <label class="tile" style="cursor:pointer">
+                    <input type="checkbox" checked> 勾选框
+                    <span class="k">input[checkbox]</span>
+                </label>
+                <label class="tile" style="cursor:pointer">
+                    <input type="range" min="0" max="100" value="58" aria-label="一个滑块"> 滑块
+                    <span class="k">input[range]</span>
+                </label>
+                <label class="tile" style="cursor:text">
+                    <input type="text" value="输入框" size="1" aria-label="一个输入框">
+                    <span class="k">cursor: text</span>
+                </label>
+                <div class="tile" data-cursor="grab">拖拽把手<span class="k">data-cursor="grab"</span></div>
+                <div class="tile" style="cursor:not-allowed;opacity:.55">点不动<span class="k">cursor: not-allowed</span></div>
+                <div class="tile" style="cursor:help">让位<span class="k">cursor: help</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section id="install">
+    <div class="wrap">
+        <h2>装进去</h2>
+        <p class="sub">放在 <code>&lt;head&gt;</code> 里,或者 <code>&lt;/body&gt;</code> 前面,哪儿都行。它会自己去读每个元素已有的 <code>cursor</code>,也会认按钮和链接 —— 你现有的 CSS 一个字都不用改。</p>
+
+        <div class="cols wide-left">
+            <div class="codeblock">
+<pre id="install-code"><code>&lt;link rel="stylesheet" href="cursor-embed.css"&gt;
+&lt;script src="cursor-embed.js"&gt;&lt;/script&gt;</code></pre>
+                <div class="tools"><button class="ghost" type="button" id="copy-install">复制这两行</button></div>
+            </div>
+
+            <div>
+                <h3>不想让它自己起来?</h3>
+                <p class="sub" style="margin-bottom:18px">给 script 标签加一个 <code>data-manual</code>,然后自己在合适的时机调 <code>CursorEmbed.init()</code>。触屏设备上默认就是不起来的 —— 那里没有系统光标可藏,手指底下也没有「划到某块元素上」这件事。</p>
+                <pre><code>&lt;script src="cursor-embed.js" data-manual&gt;&lt;/script&gt;
+&lt;script&gt;
+  CursorEmbed.init({ size: 34 });
+&lt;/script&gt;</code></pre>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="shapes">
+    <div class="wrap">
+        <h2>形状</h2>
+        <p class="sub">标准光标关键字里,<b>24 个有画法</b>。每一格都用真的 <code>cursor</code> 声明,划过去就能看到 —— 这些格子本身就是说明书。</p>
+
+        <div class="cat">
+            <div class="cell" style="cursor:pointer"><span class="val">pointer</span><span class="say">一坨向指针聚拢的液体</span></div>
+            <div class="cell" style="cursor:grab"><span class="val">grab</span><span class="say">和可点击同一个形状,所以两族之间来回换不会白收拢一次</span></div>
+            <div class="cell" style="cursor:not-allowed"><span class="val">not-allowed</span><span class="say">一圈散开的环,中间是空的</span></div>
+            <div class="cell" style="cursor:no-drop"><span class="val">no-drop</span><span class="say">同上</span></div>
+            <div class="cell" style="cursor:text"><span class="val">text</span><span class="say">两颗球,中间牵着一丝</span></div>
+            <div class="cell" style="cursor:zoom-in"><span class="val">zoom-in</span><span class="say">九个方位,一茬一茬地散开</span></div>
+            <div class="cell" style="cursor:zoom-out"><span class="val">zoom-out</span><span class="say">同上,反过来聚拢</span></div>
+            <div class="cell" style="cursor:col-resize"><span class="val">col-resize</span><span class="say">横着一条</span></div>
+            <div class="cell" style="cursor:row-resize"><span class="val">row-resize</span><span class="say">竖着一条</span></div>
+            <div class="cell" style="cursor:nwse-resize"><span class="val">nwse-resize</span><span class="say">斜着 45°</span></div>
+            <div class="cell" style="cursor:nesw-resize"><span class="val">nesw-resize</span><span class="say">斜着 −45°</span></div>
+            <div class="cell dim" style="cursor:pointer"><span class="val">按住不放</span><span class="say">在任何可点的格子上按下去 —— 它摊开成一片;松手时从摊开直接收回原来那个形状,中间不经过一颗普通球</span></div>
+        </div>
+
+        <p class="handover-note">
+            <b>还有 10 个同族的值没单列</b> —— <code>ew / e / w</code> 和 <code>col</code> 是同一条轴,<code>ns / n / s</code> 和 <code>row</code> 是同一条,四个斜角各带两个别名。它们画出来的东西和上面那四条线完全一样。
+        </p>
+
+        <h3 style="margin-top:38px">剩下 9 个没有画法,那就原样让位</h3>
+        <p class="sub" style="margin-bottom:16px">
+            要了这些值的地方,系统光标会<b>留着</b> —— 因为把原装的那一个藏掉却不给替代,是最坏的结果。球还在,只是不变形。
+        </p>
+        <div class="chips">
+            <span class="chip" style="cursor:crosshair">crosshair</span>
+            <span class="chip" style="cursor:help">help</span>
+            <span class="chip" style="cursor:wait">wait</span>
+            <span class="chip" style="cursor:progress">progress</span>
+            <span class="chip" style="cursor:cell">cell</span>
+            <span class="chip" style="cursor:alias">alias</span>
+            <span class="chip" style="cursor:copy">copy</span>
+            <span class="chip" style="cursor:context-menu">context-menu</span>
+            <span class="chip" style="cursor:vertical-text">vertical-text</span>
+        </div>
+    </div>
+</section>
+
+<section id="tune">
+    <div class="wrap">
+        <h2>可以改的</h2>
+        <p class="sub">动一下就知道。左边每改一处,右边那段代码跟着变 —— 它只写你改过的,出厂值不出现。光标本身不会闪掉:改配置是整只换一只,球留在原地。</p>
+
+        <div class="cols">
+            <div>
+                <div class="knobs">
+                    <div class="knob">
+                        <div class="head"><span class="label">球的直径</span><span class="read" id="r-size">26px</span></div>
+                        <input type="range" id="k-size" min="16" max="48" step="1" value="26" data-key="size">
+                    </div>
+
+                    <div class="knob">
+                        <div class="head"><span class="label">颜色</span><span class="read" id="r-color">出厂</span></div>
+                        <div class="swatches" id="swatches">
+                            <button class="sw" type="button" data-color="" aria-pressed="true" title="出厂黑球"></button>
+                            <button class="sw" type="button" data-color="#2f3bd0" aria-pressed="false" title="#2f3bd0" style="background:#2f3bd0"></button>
+                            <button class="sw" type="button" data-color="#b3253a" aria-pressed="false" title="#b3253a" style="background:#b3253a"></button>
+                            <button class="sw" type="button" data-color="#1f6b52" aria-pressed="false" title="#1f6b52" style="background:#1f6b52"></button>
+                            <button class="sw" type="button" data-color="#3a3a3c" aria-pressed="false" title="#3a3a3c" style="background:#3a3a3c"></button>
+                            <input class="sw-pick" type="color" id="k-color" value="#2f3bd0" aria-label="自己挑一个颜色">
+                        </div>
+                    </div>
+
+                    <div class="knob">
+                        <div class="head"><span class="label">按下时缩多少</span><span class="read" id="r-press">0.14</span></div>
+                        <input type="range" id="k-press" min="0" max="0.5" step="0.02" value="0.14" data-key="press">
+                    </div>
+
+                    <div class="knob">
+                        <div class="head"><span class="label">形状进出的速度</span><span class="read" id="r-speed">1×</span></div>
+                        <input type="range" id="k-speed" min="0.4" max="3" step="0.1" value="1" data-key="speed">
+                    </div>
+
+                    <div class="switches">
+                        <label class="switch"><input type="checkbox" id="k-shadow" data-key="shadow" checked> 带投影</label>
+                        <label class="switch"><input type="checkbox" id="k-hide" data-key="hideNative" checked> 藏掉系统光标(关掉就是球和箭头并存)</label>
+                    </div>
+                </div>
+
+                <div class="tools" style="justify-content:flex-start;margin-top:28px">
+                    <button class="ghost" type="button" id="reset">恢复出厂</button>
+                </div>
+            </div>
+
+            <div class="codeblock">
+                <pre><code id="tune-code"></code></pre>
+                <p class="sub" style="margin:14px 0 0;font-size:14px">改配置就是再调一次 <code>init()</code>。旧的会连同它写下的行内 <code>cursor</code> 一起收拾干净,所以调多少次都不会在页面上留下垃圾。</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="api">
+    <div class="wrap">
+        <h2>接口</h2>
+        <p class="sub">默认它自己起来、自己判断,什么也不用管。想插手的时候有这几个口子。</p>
+
+        <div class="api">
+            <div class="row"><span class="sig">CursorEmbed.init(opts?)</span><span class="doc">起一份实例并返回它。<b>改配置也是调这个</b> —— 整只重建,但球留在原地。</span></div>
+            <div class="row"><span class="sig">CursorEmbed.instance()</span><span class="doc">拿到当前那一份,没有就是 <code>null</code>。</span></div>
+            <div class="row"><span class="sig">CursorEmbed.destroy()</span><span class="doc">收走。它给元素补过的每一条行内 <code>cursor</code> 都会按原值和原来的 <code>!important</code> 还回去。</span></div>
+            <div class="row"><span class="sig">CursorEmbed.boot()</span><span class="doc">加了 <code>data-manual</code> 之后,用这个手动起。</span></div>
+            <div class="row"><span class="sig">inst.set(value)</span><span class="doc">手动指定形状,压过自动判断。传 <code>null</code> 交还给自动。给了不认识的值返回 <code>false</code> 而且<b>什么都不动</b>。</span></div>
+            <div class="row"><span class="sig">inst.setWaiting(true)</span><span class="doc">你自己那边的等待态:收成一颗普通球,但球留着不消失。等你的事完了再传 <code>false</code>。</span></div>
+            <div class="row"><span class="sig">inst.refresh(el?)</span><span class="doc">元素的样式是后来改的,叫它重读一次。不传 <code>el</code> 就是清空全部缓存重来。</span></div>
+            <div class="row"><span class="sig">inst.destroy()</span><span class="doc">只收这一份。</span></div>
+        </div>
+
+        <h3 style="margin-top:40px">除此之外的每一项</h3>
+        <div class="api" style="margin-top:16px">
+            <div class="row"><span class="sig">size <i>26</i></span><span class="doc">球的直径,单位 px。<b>形状是按它等比缩放的</b> —— 调大了整坨一起变大。</span></div>
+            <div class="row"><span class="sig">color <i>""</i></span><span class="doc">出厂是一颗带高光的黑球。给字符串就是纯色;给 <code>{ hi, mid, lo, ink }</code> 就是自己定那四个渐变停靠点。</span></div>
+            <div class="row"><span class="sig">press <i>0.14</i></span><span class="doc">按下时缩掉的比例。<code>0</code> 就是按下不缩。</span></div>
+            <div class="row"><span class="sig">speed <i>1</i></span><span class="doc">形状进出快慢的倍率。<code>2</code> 是两倍快。</span></div>
+            <div class="row"><span class="sig">shadow <i>true</i></span><span class="doc">投影。</span></div>
+            <div class="row"><span class="sig">zIndex <i>9999</i></span><span class="doc">壳所在的层。你的东西压在它上面就调大它。</span></div>
+            <div class="row"><span class="sig">hideNative <i>true</i></span><span class="doc">藏系统光标。关掉就是球和箭头并存。</span></div>
+        </div>
+
+        <p class="sub" style="margin-top:22px;margin-bottom:0">
+            除此之外的都不往外放 —— 环的半径、液滴的个数、各处摆动、时间常数。<b>那些是形状本身</b>,动它们不是「调一下」,是改设计。
+        </p>
+    </div>
+</section>
+
+<section>
+    <div class="wrap">
+        <h2>装之前该知道的</h2>
+        <ul class="limits">
+            <li><b>触屏不启用。</b>那里没有系统光标可藏,手指底下也没有「划到某块元素上」这件事,接上去只是白占一层 DOM。</li>
+            <li><b>每个元素第一次被划到时,可能闪一帧系统光标。</b>因为必须先读到它自己的 <code>cursor</code> 值才知道该藏不该藏。之后就进缓存了,不再读也不再闪。</li>
+            <li><b>一次只有一份。</b>再调 <code>init()</code> 会换掉上一只,不是并存两只。</li>
+            <li><b>减弱动效打开时,不形变也不缩</b>,只剩一颗跟着指针走的球。这是读系统的 <code>prefers-reduced-motion</code>,不是你配的。</li>
+            <li><b>指针离开窗口、窗口失焦,它都会收起来。</b></li>
+            <li><b>靠 SVG 的 goo 滤镜成形</b>,所以是现代浏览器的东西。老引擎上球还在,形状不会出现。</li>
+        </ul>
+    </div>
+</section>
+
+<footer class="colophon">
+    <div class="wrap">
+        <span>cursor-embed 1.0.0</span>
+        <span>装进去就两行,其余都在配置文件里</span>
+    </div>
+</footer>
+
+<script>
+/*
+    这一页自己的那点脚本 —— 旋钮和代码块。和光标库无关。
+    注意自动起步已经把光标启动了,这里从头到尾没碰过它,直到你动第一个旋钮。
+*/
+(function () {
+    "use strict";
+
+    var D = { size: 26, color: "", press: 0.14, speed: 1, shadow: true, hideNative: true };
+    var ORDER = ["size", "color", "press", "speed", "shadow", "hideNative"];
+    var cfg = Object.assign({}, D);
+
+    var $ = function (s) { return document.querySelector(s); };
+
+    // ── 换配置 = 整只重建。球留在原地(库自己记着指针在哪) ──
+    function apply() {
+        window.CursorEmbed.init(cfg);
+        // 记号点、选中的色块、滑块跟着球的颜色走。出厂黑球时这一页是黑白的
+        var hex = (typeof cfg.color === "string" && cfg.color) ? cfg.color : "#141414";
+        document.documentElement.style.setProperty("--accent", hex);
+        paint();
+    }
+
+    // ── 只写改过的那些。出厂的默认值不出现 ──
+    function paint() {
+        var changed = ORDER.filter(function (k) { return cfg[k] !== D[k]; });
+
+        $("#r-size").textContent = cfg.size + "px";
+        $("#r-press").textContent = (cfg.press === 0 ? "不缩" : cfg.press.toFixed(2));
+        $("#r-speed").textContent = cfg.speed.toFixed(1).replace(/\.0$/, "") + "×";
+        $("#r-color").textContent = cfg.color === "" ? "出厂" : String(cfg.color).toUpperCase();
+
+        var out;
+        if (!changed.length) {
+            out = "// 出厂设置。这一段连写都不用写 ——\n// 光是那两个标签,整条带子就已经是活的了。";
+        } else {
+            var body = changed.map(function (k) {
+                var v = cfg[k];
+                if (typeof v === "string") v = JSON.stringify(v);
+                return "  " + k + ": " + v;
+            });
+            out = "CursorEmbed.init({\n" + body.join(",\n") + "\n});";
+        }
+        $("#tune-code").textContent = out;
+    }
+
+    // ── 旋钮 ──
+    ["size", "press", "speed"].forEach(function (k) {
+        $("#k-" + k).addEventListener("input", function () {
+            cfg[k] = parseFloat(this.value);
+            apply();
+        });
+    });
+
+    ["shadow", "hideNative"].forEach(function (k) {
+        var node = k === "shadow" ? $("#k-shadow") : $("#k-hide");
+        node.addEventListener("change", function () {
+            cfg[k] = this.checked;
+            apply();
+        });
+    });
+
+    // ── 颜色:一排预设 + 一个自己挑的 ──
+    var sws = Array.prototype.slice.call(document.querySelectorAll(".sw"));
+    function pick(color) {
+        cfg.color = color;
+        sws.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.color === color)); });
+        if (color) $("#k-color").value = color;
+        apply();
+    }
+    sws.forEach(function (b) {
+        b.addEventListener("click", function () { pick(b.dataset.color); });
+    });
+    $("#k-color").addEventListener("input", function () { pick(this.value); });
+
+    // ── 恢复出厂 ──
+    $("#reset").addEventListener("click", function () {
+        cfg = Object.assign({}, D);
+        $("#k-size").value = D.size;
+        $("#k-press").value = D.press;
+        $("#k-speed").value = D.speed;
+        $("#k-shadow").checked = D.shadow;
+        $("#k-hide").checked = D.hideNative;
+        $("#k-color").value = "#2f3bd0";
+        sws.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.color === "")); });
+        apply();
+    });
+
+    // ── 复制 ──
+    function flash(btn, text) {
+        var was = btn.textContent;
+        btn.textContent = text;
+        setTimeout(function () { btn.textContent = was; }, 1600);
+    }
+    $("#copy-install").addEventListener("click", function () {
+        var btn = this;
+        var text = $("#install-code").textContent;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(
+                function () { flash(btn, "已复制"); },
+                function () { flash(btn, "没权限,自己选中复制吧"); });
+        } else {
+            flash(btn, "这个环境不让复制,自己选中吧");
+        }
+    });
+
+    paint();
+})();
+</script>
+
+</body>
+</html>

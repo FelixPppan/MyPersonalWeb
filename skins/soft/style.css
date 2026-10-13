@@ -234,7 +234,7 @@ html.is-pressing #latex-dent {
 .card {
     background: var(--matte-face);
     border: none;
-    padding: 1.75rem;
+    padding: 2.625rem;
     border-radius: 32px;
     margin-bottom: 1.25rem;
     color: var(--ink);
@@ -555,7 +555,7 @@ iframe {
     }
 
     .card {
-        padding: 1.25rem;
+        padding: 1.875rem;
         border-radius: 26px;
     }
 

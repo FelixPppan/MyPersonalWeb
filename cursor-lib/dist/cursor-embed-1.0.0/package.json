@@ -1,0 +1,39 @@
+{
+  "name": "cursor-embed",
+  "version": "1.0.0",
+  "description": "A liquid cursor that changes shape to match whatever it is over. No dependencies, two files, no JS to write.",
+  "main": "cursor-embed.js",
+  "style": "cursor-embed.css",
+  "browser": "cursor-embed.js",
+  "files": [
+    "cursor-embed.js",
+    "cursor-embed.css",
+    "demo.html",
+    "README.md",
+    "README.zh.md",
+    "LICENSE.txt",
+    "package.json"
+  ],
+  "keywords": [
+    "cursor",
+    "pointer",
+    "mouse-follower",
+    "liquid",
+    "goo",
+    "svg-filter",
+    "interaction"
+  ],
+  "author": "Guoxi Pan <panguoxipgx@gmail.com>",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "private": true,
+  "sideEffects": true,
+  "scripts": {
+    "build": "node build.js",
+    "test": "node build.js && node test_embed.js && node check_demo.js",
+    "pack": "node pack.js",
+    "ship": "node build.js && node test_embed.js && node check_demo.js && node pack.js"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}

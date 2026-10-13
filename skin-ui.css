@@ -50,11 +50,319 @@ html.has-pointer * {
     cursor: none !important;
 }
 
+/*
+ * ── 减弱动效：球只跟手，不做形变 ──
+ *
+ * 球的动画只有两处，一处一半：
+ *   1. 淡入淡出（上面 #latex-ball 那条 opacity 0.12s）—— 归这里管，去掉。
+ *      没了过渡，球该出现就出现、该消失就消失，中间那一帧不留。
+ *   2. 按下时的缩放（`1 - press·0.14`）—— 归 ball.js 管，它把 pressScale 报成 0。
+ *      这边**不许碰 transform**：那个属性是 ball.js 独占的，样式表一插进来两边就抢，
+ *      迟早有一帧按位置算的对不上（球会抖一下那种）。
+ * 按下还剩的反馈是各外观自己的 box-shadow 收紧（style.css 里 `html.is-pressing`），
+ * 那是瞬时切换、没有过渡，不是动效，所以留着 —— 一个键按下去不能什么都不发生。
+ *
+ * 这一条和 hover.js / loading.js 里那两处是**同一个判断的两种写法**：那边 JS 读
+ * matchMedia，这边 CSS 自己算。差别只有一处：媒体查询是实时的，JS 那两处在初始化时
+ * 读一次就定了。所以开着页面改系统设置的话，球的淡入淡出立刻停，液体那一半要刷新
+ * 才跟上 —— 已知界限，写在 cursor-states.md 那一行里。
+ */
+@media (prefers-reduced-motion: reduce) {
+    #latex-ball {
+        transition: none;
+    }
+}
+
+/*
+ * 页面在等媒体的时候，光标交给 cursor-fx 的液体动画（loading.js 负责加减这个类）。
+ * 必须 !important：球的不透明度是 ball.js 直接写在 style 上的内联值，
+ * 普通规则压不过内联样式，而这里正是要压过它。
+ * 加了这个类球不会位移，只是把同样的位置让给液体——液体第 0 帧就是同一颗球。
+ */
+html.has-pointer.is-loading #latex-ball {
+    opacity: 0 !important;
+}
+
+/*
+ * 元素状态（可点击 / 不可点击）同样接管这颗球：开着的时候球必须让开。
+ * 可点击那坨虽然中心是实的，但边缘有的方向比球还窄；不可点击更是正中间空着一个洞，
+ * 球会从洞里露出来。hover.js 负责加减这个类，它在 q 落到阈值以下时才加回来
+ * ——那时液体已经盖住中心，球在它底下淡回来，看不出交接。
+ */
+html.has-pointer.is-hover-state #latex-ball {
+    opacity: 0 !important;
+}
+
+/*
+ * ── 意图通道：--cursor ──
+ *
+ * 上面那条 `html.has-pointer *` 把**所有**元素的 cursor 都压成了 none，于是
+ * getComputedStyle(el).cursor 什么也问不出来 —— 想知道「这块该不该变」，只能在
+ * 另开一条通道和「临时摘掉 !important 再读」之间选。选前者：自定义属性正常继承、
+ * 不参与绘制，可以写在控件自己那一段样式旁边，离它的样式最近。
+ *
+ * 取值语义和 cursor 一样。没写的地方落到 auto（= 不改变光标的形状）。
+ * hover.js 读它；只有清单上做过的值才会被认领，别的值它一律忽略。
+ *
+ * 元素本身没有 cursor:pointer 也没关系 —— 这一组列的是**「点它就是做事」**的元素，
+ * 按的是意图不是 UA 样式表。导航和作品集卡片两条以前是 `<a onclick>` / `<div onclick>`，
+ * 浏览器连手型都不给（原生样式表只认带 href 的链接），是这里补上的；
+ * 现在它们都已经是真的链接了（`<a href="#/...">`，理由见 main.js 和 pages/portfolio.js
+ * 的注释：**没有 href 的 `<a>` 不在 Tab 顺序里**），但 `a[href]` 覆盖不到的地方
+ * 还得靠这一组，所以两项都留着 —— 它们钉的是「导航」和「卡片」这两个身份，
+ * 不是那两个标签此刻长什么样。
+ */
+html {
+    --cursor: auto;
+}
+
+a[href],
+button,
+[role="button"],
+summary,
+label[for],
+.nav-btn a,
+.portfolio-item,
+select,
+input[type="button"], input[type="submit"], input[type="reset"],
+input[type="checkbox"], input[type="radio"], input[type="file"],
+input[type="color"], input[type="range"], input[type="image"] {
+    --cursor: pointer;
+}
+
+/*
+ * 作品集卡片是一条链接（`<a class="portfolio-item" href="#/project?id=N">`），
+ * 整块可点、按下去就是换页。这里补的是**当链接用的代价**：UA 样式表会给带 href 的
+ * 链接加下划线和链接色，而这张卡里包着标题和一行行技术栈，全变成蓝色带下划线的样子
+ * 就不是原来的设计了。三个外观各写一遍没必要，放在这份共用的表里就够。
+ */
+.portfolio-item {
+    text-decoration: none;
+    color: inherit;
+}
+
+/*
+ * ── 键盘：焦点环不归这套主题管，而且明确不许动 ──
+ *
+ * 这套东西只在**指针**这一层工作：球的坐标来自 pointermove，形状取决于指针底下
+ * 是什么元素。键盘是另一条路 —— Tab 走的是焦点，焦点环由浏览器画，我们既不画
+ * 也不该藏。
+ *
+ * 全站至今没有一条 `outline: none`，tools/cursor-fx/test_safety.js 第 2 节一直盯着
+ * 这件事。这不是洁癖：`html.has-pointer *` 已经把系统光标压成了 none，谁再顺手
+ * 把 outline 去掉，键盘用户就**一个可见的位置指示都没有了** —— 那不是「样式更干净」，
+ * 是把人锁在页面外面。
+ *
+ * 球也不会被卷进来：#latex-ball 是 pointer-events: none，点了不响应，
+ * 也永远不会成为焦点目标（它还是个 aria-hidden 的空 div）。
+ */
+
+/*
+ * 文本：能选中、能读的正文，以及文字类控件。形状见 cursor-fx.js 的 sampleBeam
+ * —— 最早那一版是「化成液体,但被力聚合为一个竖线」,2026-09-18 用户改成
+ * 「两个小球,中间有些距离,中间有液体藕断丝连」,所以现在画的是**两颗小球 +
+ * 中间一丝**,不是线。
+ *
+ * ── 这一长串 :not 是干嘛的,以及为什么躲不掉 ──
+ *
+ * --cursor 是会**继承**的。`<a href><h3>卡片标题</h3></a>` 里那个 h3,祖先明明
+ * 声明了 pointer,可只要这里有一条 `h3 { --cursor: text }`,它照样拿到 text ——
+ * 因为「写在元素自己身上的声明」永远压过「从祖先继承来的值」,**和特异性无关**。
+ * 所以想「链接/按钮里面的文字不算文本」,只能在选择器层面把它们排掉。
+ *
+ * 这就带来一个必须盯住的漂移:以后谁往上面那组加一个选择器、却忘了加进这里,
+ * 包在它里面的正文就会悄悄变回 I 形,而且不报错。这条同步有测试盯着
+ * (tools/cursor-fx/test_page.js 的「排除链」一节)。
+ *
+ * ── 为什么整条用 :where() 包着 ──
+ *
+ * 十来个 :not() 叠起来,特异性会涨到 (0,10,10) 那么高,以后想覆盖它就得写更长的
+ * 选择器。:where() 把这条规则的权重压成 0,于是任何一条别的规则都能盖过它 ——
+ * 这正是想要的保守方向:它是「默认给正文」的一层,不是要跟谁抢的东西。
+ *
+ * ── 换行只能换在括号里面 ──
+ *
+ * :where(...) 和 :not(...) 之间**一个空格都不能有**。CSS 里空白是「后代」组合符,
+ * 一句 `:where(p) :not(.x *)` 的意思是「.x 的后代里、又位于某个 p 里面的元素」——
+ * 那是 p 套 p,页面上根本不存在,于是整条规则静默失效:一处都不生效,也不报错。
+ * 这条规则的第一版就是这么写坏的(换行换在了两个伪类中间)。
+ * 所以长选择器只能断在括号内部的逗号后面,那里不是组合符。
+ * tools/cursor-fx/test_page.js 里有一句专门盯这个。
+ */
+:where(h1, h2, h3, h4, h5, h6, p, li, dt, dd, blockquote, figcaption, td, th, pre):not(
+    a[href] *, button *, [role="button"] *, summary *, label[for] *,
+    .nav-btn a *, .portfolio-item *, select *,
+    [disabled] *, [aria-disabled="true"] *, .cursor-not-allowed *,
+    .cursor-pointer *, #color-palette *, #skin-switcher *,
+    [data-resize="e"] *, [data-resize="s"] *,
+    [data-resize="se"] *, [data-resize="nw"] *,
+    [data-drag="grab"] *, [data-drag="move"] *,
+    [data-zoom="in"] *, [data-zoom="out"] *) {
+    --cursor: text;
+}
+
+/*
+ * 文字类控件。和上面那组分开写,因为理由不同:上面是「这里有正文」,这里是
+ * 「这个控件是拿来打字的」。写成**正列**而不是 `input:not([type=hidden])` 那种反选,
+ * 是为了让「没列到的类型」落到中立的 auto(不改变形状),而不是被误认成可点击 ——
+ * 和 hover.js 「清单上没做过的值一律不认领」是同一条原则。反选写法会把文本框
+ * 认成可点击,而文本框恰恰是清单里「文本」那一行的宿主。
+ *
+ * input 不写 type 时按规范就是 text,所以 `input:not([type])` 也得进来。
+ */
+textarea,
+input:not([type]),
+input[type="text"], input[type="search"], input[type="email"], input[type="password"],
+input[type="url"], input[type="tel"], input[type="number"],
+input[type="date"], input[type="datetime-local"], input[type="month"],
+input[type="week"], input[type="time"] {
+    --cursor: text;
+}
+
+/*
+ * 点不动的：原生 disabled、aria-disabled，以及手工标注。
+ *
+ * 用 !important 是因为这一组的特异性必须**无条件**压过上面那组：
+ * `a[href]` 是 (0,1,1)，比单个类 (0,1,0) 高，一条带 href 的链接挂上
+ * .cursor-not-allowed 的话，光靠书写顺序压不住。
+ */
+[disabled],
+[aria-disabled="true"],
+.cursor-not-allowed {
+    --cursor: not-allowed !important;
+}
+
+/* 逃生口：站上还没有「不可点击」的宿主元素，标注用的 */
+.cursor-pointer {
+    --cursor: pointer !important;
+}
+
+/*
+ * 拖动缩放：窗口/面板的边和角，拖它改尺寸。
+ *
+ * 用户把这条说全了：是**拖动缩放**（不是拖动挪位置），而且方向要跟着缩放轴走。
+ * 形状见 cursor-fx.js 的 sampleLine —— 和「文本」是同一次挤压、同一份材料，
+ * 只是转到了各自的轴上，对角也是同一根线转 45°。
+ *
+ * ── data-resize 的取值是「拖的是哪条边/哪个角」 ──
+ *
+ * 因为方向是这块东西的属性，不是这一类东西的属性：同一个小窗口，右边是 0°、
+ * 下边是 90°、右下角是 45°。「这块能缩放」说明不了要画哪条线，所以标注的时候
+ * 必须连是哪条边一起说。e / s / se / nw 就是那四条边/角，各自对应一个标准
+ * 光标值（右边 -> ew-resize，右下角 -> nwse-resize ...）。
+ *
+ * 取值为什么不是 ew-resize 本身：光标名说的是**轴**，而轴不区分方向 ——
+ * 右边和下边能分出来（一横一竖），但「往东拖」和「往西拖」在光标名上是同一个
+ * ew-resize。写光标的那个名字，页面自己就分不清拖的是哪边了。
+ *
+ * ── 为什么这组非声明不可 ──
+ *
+ * 上面那条 `html.has-pointer *` 把 cursor 全压成了 none，「回落到真 cursor」
+ * 那条退路在这里本来就问不到东西；而浏览器给这些元素的原生 cursor 也是 auto
+ * （缩放边多半是空 div，连原生样式都没有）。
+ *
+ * !important 的理由和 disabled 那组一样：`a[href]` 是 (0,1,1)，比单个属性选择器
+ * (0,1,0) 高，一条又带 href 又带缩放边的元素光靠书写顺序压不住。
+ *
+ * ── 这里能做的只有一半 ──
+ *
+ * 浏览器里看不到「窗口正在被缩放」这件事 —— 那是窗口系统在动窗口，网页收不到
+ * 事件。所以这一条声明管的是「这块东西是缩放边」，页面自己按住的过程中由
+ * hover.js 记下的那一格锁住形状。窗口系统、Electron 外壳那类宿主知道实情，
+ * 走另一个入口：`window.HoverWatch.setResize("ew-resize")`（见 hover.js 文件头）。
+ */
+/* 右边：左右拉 -> 横线 */
+[data-resize="e"] {
+    --cursor: ew-resize !important;
+}
+
+/* 下边：上下拉 -> 竖线 */
+[data-resize="s"] {
+    --cursor: ns-resize !important;
+}
+
+/* 右下角：↘ -> 45° 的斜线 */
+[data-resize="se"] {
+    --cursor: nwse-resize !important;
+}
+
+/* 左上角：↖（也就是 ↗ 那条轴）-> −45° 的斜线 */
+[data-resize="nw"] {
+    --cursor: nesw-resize !important;
+}
+
+/*
+ * ── 抓取：能拖的东西，和正在拖的东西 ──
+ *
+ * 用户对这四个值的口径最后定成:「抓取中也用这个(点击特效),可抓取的效果用可点击
+ * 特效」。所以四个值分两半 ——
+ *   grab                        → 可点击那一坨(能拖的东西和能点的东西,手感是一回事)
+ *   grabbing / move / all-scroll → 点击特效那一摊(抓起来的那一下就是按下去那一下)
+ * 形状见 cursor-fx.js 的 sampleViscous / sampleSplat。
+ *
+ * 取值写 grab / move 而不是「写成光标名」,理由和 data-resize 是同一条的镜像:
+ * 那里是「光标名说不清方向」(e / w 都是 ew-resize),这里是「光标名说不清这块
+ * 东西是什么」—— grab 和 grabbing 是同一件事的两个时刻(能拖 / 正拖着),move 是
+ * 另一件事(搬窗口那种「移动中」)。宿主自己知道是哪种,就写哪种。
+ *
+ * !important 的理由和上面那组一样:a[href] 是 (0,1,1),一条又是链接又是拖动把手的
+ * 元素光靠书写顺序压不住。
+ */
+[data-drag="grab"] {
+    --cursor: grab !important;
+}
+
+[data-drag="move"] {
+    --cursor: move !important;
+}
+
+/*
+ * ── 放大缩小：图片画廊、地图、看板那类「推近 / 拉远」的地方 ──
+ *
+ * 这一条是用户点的:黑球从中心散出几颗液体球、四周那几颗往中心聚,中心球比默认球小。
+ * 形状见 cursor-fx.js 的 sampleZoom,中心球小到 ZOOM_CORE(0.62×R0)—— 不是「大概
+ * 小一圈」,引擎里就写着这个数。
+ *
+ * 取值和标准光标同名(in / out),因为这里没有「同一件事的两个时刻」要分:
+ * in 就是推近、out 就是拉远,一一对应。方向由取值给,形状由引擎按方向分支出两条
+ * 路径(放大往外散、缩小先甩开再往内收)。
+ */
+[data-zoom="in"] {
+    --cursor: zoom-in !important;
+}
+
+[data-zoom="out"] {
+    --cursor: zoom-out !important;
+}
+
+/*
+ * ── 画不出来的状态，把原版鼠标让回来 ──
+ *
+ * 用户定的规矩：除非该状态没有对应鼠标效果，否则自动隐藏原版鼠标。反过来说就是，
+ * 遇到一个我们画不出来的标准光标（crosshair / help / zoom-in ...），原版那只
+ * 得露面 —— 以前不认领等于「什么都不做」，指针看着像能点、点下去却是另一回事，
+ * 那是撒谎。
+ *
+ * 让位不逐元素改样式，只加一个类（hover.js 在「此刻没形状可画，而元素要的又是
+ * 一个我们画不出来的标准光标」时挂上），配一个自定义属性说出该显示哪个。
+ * 于是指针怎么动都不用再碰样式表。
+ *
+ * 特异性：这条 (0,2,1) 压过上面那条 (0,1,1)，两条都是 !important，所以是它赢。
+ * 多出来的那个类就是「让位」这件事本身，写在这里比写十条逐元素的规则清楚。
+ *
+ * 注意这是**明知而故意**的两个光标同框：球不动，原版鼠标也出来（用户选的）。
+ */
+html.has-pointer.show-real-cursor * {
+    cursor: var(--real-cursor) !important;
+}
+
 html.has-pointer #color-palette,
 html.has-pointer #color-palette *,
 html.has-pointer #skin-switcher,
 html.has-pointer #skin-switcher * {
     cursor: pointer !important;
+    /* 容器本身（按钮之间的缝）也算可点，和 cursor 那条保持一致 */
+    --cursor: pointer;
 }
 #skin-switcher {
     position: fixed;
@@ -104,6 +412,7 @@ html.theme-black #skin-switcher button.is-active {
 html.has-pointer #skin-switcher,
 html.has-pointer #skin-switcher * {
     cursor: pointer !important;
+    --cursor: pointer;
 }
 
 /* Color palette sits under skin switcher in latex mode */
@@ -135,4 +444,42 @@ html[data-skin="glass"] #soft-light {
 html[data-skin="soft"] #navbar,
 html[data-skin="soft"] #content {
     filter: none !important;
+}
+
+/*
+ * ══ 交还系统光标（脚本出错时的保险，也是这条链子的最后一环）══
+ *
+ * 上面 `html.has-pointer *` 把系统光标整片压成了 none —— 位置全指望那颗球。
+ * 所以这套主题一旦自己坏掉，用户失去的不是「一个好看的样式」，是**指针本身**。
+ * ball.js 里那段 handBack 就是为此写的：脚本抛错就整台退场。
+ *
+ * 这一条是**CSS 那一半**，管的是「JS 那一半没跑成」的情况：
+ *
+ *   - ball.js 还没来得及跑就出错了：它的 error 监听要等 initBallCursor() 被叫到
+ *     才装上，这中间任何一步抛错，装监听这件事自己就轮不到了；
+ *   - handBack() 跑了一半被打断（它要摘的类是五个，摘到第三个的时候出错）；
+ *   - 宿主决定关掉这套主题：直接往根上加 cursor-off 就行，不必先叫上 handBack()。
+ *
+ * 它唯一的依赖是「根上有没有这个类」，不依赖任何一段 JS 跑对 —— 这正是它存在的
+ * 理由。全站只有 ball.js 会往根上加 has-pointer（三个外观的 style.css 里那条
+ * 藏光标的规则也只听这个类），所以正常路径下管住这一个类就够了。
+ *
+ * 只要根上有 cursor-off，藏光标那几条规则就整片失效 —— 每个元素退回它**自己**
+ * 该有的光标（正文是 I 形、按钮和链接是手型、别处是箭头），也就是「这套主题
+ * 从没来过」的样子。不是一律 auto：那会把「这里能点」这个信息也一起抹掉。
+ *
+ * ── 为什么必须放在这个文件的最后 ──
+ *
+ * 它和上面那条 `html.has-pointer, html.has-pointer *` **特异性完全相同**，靠的就是
+ * 书写顺序赢。三个外观的 style.css 里也各有一份一模一样的藏光标规则，但它们都在
+ * skin-ui.css **之前**加载（见 index.html 的 link 顺序），所以真正的对手只有同文件里
+ * 那一份 —— 排在它后面就够了。这一条挪到前面去，保险立刻失效，而且不报错。
+ * tools/cursor-fx/test_safety.js 第 3 节盯着这个顺序。
+ *
+ * `#color-palette` / `#skin-switcher` 那几条带 id 的规则（让色板和切换器保持手型）
+ * 特异性更高，这里**故意不压**：交还之后它们给的是原版手型，正是想要的。
+ */
+html.cursor-off,
+html.cursor-off * {
+    cursor: auto !important;
 }

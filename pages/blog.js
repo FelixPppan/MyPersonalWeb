@@ -4,10 +4,10 @@ window.renderBlog = function () {
       <h1>Blog</h1>
     </div>
     <div class="blog-tabs">
-      <button class="blog-tab-btn active" onclick="window.switchBlogTab('dh2650')">
+      <button class="blog-tab-btn active" data-tab="dh2650" onclick="window.switchBlogTab('dh2650')">
         DH2650 VT26 Computer Game Design Blog
       </button>
-      <button class="blog-tab-btn" onclick="window.switchBlogTab('dh2323')">
+      <button class="blog-tab-btn" data-tab="dh2323" onclick="window.switchBlogTab('dh2323')">
         DH2323 VT26 Computer Graphics and Interaction
       </button>
     </div>
@@ -20,12 +20,16 @@ window.renderBlog = function () {
 }
 
 window.switchBlogTab = function (tab) {
-    // 更新选项卡按钮的激活状态
-    const buttons = document.querySelectorAll('.blog-tab-btn');
-    buttons.forEach(btn => {
-        btn.classList.remove('active');
+    /*
+     * 激活态按 tab 认,不读那个全局的 event。
+     * 原来写的是 event.target.classList.add('active'),靠 onclick 里的隐式全局 event ——
+     * 那是 Chrome/Safari 的私货,Firefox 里 event 根本不存在,函数会在写内容**之前**
+     * 就抛掉,于是标签页整个点不动。而且它认的是「谁被点的」,不是「该显示哪个」,
+     * 从别处调用(比如 renderBlog 的初始化)就对不上了。
+     */
+    document.querySelectorAll('.blog-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
     });
-    event.target.classList.add('active');
 
     const contentDiv = document.getElementById('blog-content');
 
@@ -130,4 +134,12 @@ The effect of distance-based LOD switching on perception of virtual characters.
             </div>
         `;
     }
+
+    /*
+     * 换标签页是把 #blog-content 整块换掉,里面那个 93MB 的 demo 从这一刻才开始加载。
+     * 换页那一路由 main.js 的 renderPage 统一收口(它拼完页面会调 scan),而这里是
+     * **渲染之后、用户动手**才发生的 —— 没有第二个人会来数。不在这里说一声,
+     * 新注入的 <video> 永远不被监听,加载态在那个标签页上就是死的。
+     */
+    if (window.LoadingWatch) window.LoadingWatch.scan(contentDiv);
 }
