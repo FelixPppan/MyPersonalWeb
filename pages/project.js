@@ -1,6 +1,32 @@
 // 项目详情（中英双语）
 const projectData = [
     {
+        id: 11,
+        titleZh: "《The Ghost》博物馆多模态交互展项",
+        titleEn: "The Ghost — Museum Multimodal Interactive Exhibit",
+        type: "video",
+        thumb: "images/the-ghost.jpg",
+        url: "https://player.bilibili.com/player.html?bvid=BV1mY4h6NEWA",
+        content: `
+      <div class="bilingual-block">
+        <p class="lang-zh">为斯德哥尔摩科技馆 Tekniska 展览制作的实体交互游戏，2026 年 10 月 30 日展出。</p>
+        <p class="lang-en">A physical interactive game made for an exhibition at Tekniska, the Stockholm Museum of Science and Technology, on display from 30 October 2026.</p>
+      </div>
+      <div class="bilingual-block">
+        <p class="lang-zh">玩家握实体船桨划船，用手势拨开迷雾，寻找三块丢失的记忆碎片。</p>
+        <p class="lang-en">Players row with a physical oar and sweep the mist aside with hand gestures to recover three lost memory fragments.</p>
+      </div>
+      <div class="bilingual-block">
+        <p class="lang-zh">船体自行积分推力与阻力，水面采用 Gerstner 波，浮力由物理引擎施加；桨上的 ESP32 以 100 Hz 经 UDP 上传 BMI270 陀螺仪数据，比较前后半圈判断前进或倒划；MediaPipe 追踪手势。</p>
+        <p class="lang-en">The boat integrates thrust and drag, the water uses Gerstner waves, and buoyancy is applied by the physics engine. An ESP32 on the oar streams BMI270 gyroscope data over UDP at 100 Hz, latching forward or reverse strokes by comparing each half rotation; MediaPipe tracks the hand gestures.</p>
+      </div>
+      <div class="bilingual-block">
+        <p class="lang-zh"><strong>我的职责：</strong>船桨与划船算法、关卡设计（小组项目）。</p>
+        <p class="lang-en"><strong>My role:</strong> the oar and rowing algorithm, and level design (group project).</p>
+      </div>
+    `,
+    },
+    {
         id: 10,
         titleZh: "休闲生存建造《Beavering Away》",
         titleEn: "Relaxing Survival & Building — Beavering Away",
@@ -56,8 +82,8 @@ const projectData = [
         <p class="lang-en">Mind-reading mechanics via chain-of-thought design: items reveal fragments of AI behavior for genuine strategic play.</p>
       </div>
       <div class="bilingual-block">
-        <p class="lang-zh">AI 辅助下三天内完成全栈开发，可玩 demo。</p>
-        <p class="lang-en">Full-stack playable demo completed in three days with AI assistance.</p>
+        <p class="lang-zh">AI 辅助下三天内完成其余全栈开发、美术与 UI 制作和交互设计，产出可玩 demo。</p>
+        <p class="lang-en">Completed the remaining full-stack development, art and UI production, and interaction design in three days with AI assistance, delivering a playable demo.</p>
       </div>
     `,
     },

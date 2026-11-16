@@ -1,6 +1,14 @@
 // 作品集列表（中英双语）
 const projects = [
     {
+        id: 11,
+        titleZh: "《The Ghost》博物馆多模态交互展项",
+        titleEn: "The Ghost — Museum Multimodal Interactive Exhibit",
+        techZh: "Godot、ESP32、MediaPipe、Gerstner 水体",
+        techEn: "Godot, ESP32, MediaPipe, Gerstner water",
+        thumb: "images/the-ghost.jpg",
+    },
+    {
         id: 10,
         titleZh: "休闲生存建造《Beavering Away》",
         titleEn: "Relaxing Survival & Building — Beavering Away",
@@ -98,7 +106,7 @@ window.renderPortfolio = function () {
     document.getElementById("content").innerHTML = `
     <div class="card">
       <h1>作品集 | Portfolio</h1>
-      <p>游戏设计 | Game Design · 前端开发 | Front-end Development · 游戏开发 | Game Development · UX 设计 | UX Design</p>
+      <p>游戏设计 | Game Design · 交互设计 | Interaction Design · 前端开发 | Front-end Development · 游戏开发 | Game Development · UX 设计 | UX Design</p>
     </div>
     <div class="portfolio-grid">
       ${projects.map(p => `

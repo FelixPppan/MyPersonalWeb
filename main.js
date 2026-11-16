@@ -3,6 +3,7 @@ const navItems = [
     { name: "首页 | Home", page: "home" },
     { name: "博客 | Blog", page: "blog" },
     { name: "作品集 | Portfolio", page: "portfolio" },
+    { name: "经历 | Experience", page: "experience" },
     { name: "光标 | Cursor", page: "cursor" },
     { name: "关于我 | About", page: "about" },
 ];
@@ -46,6 +47,7 @@ window.renderPage = function () {
     if (page === "home") renderHome();
     else if (page === "blog") renderBlog();
     else if (page === "portfolio") renderPortfolio();
+    else if (page === "experience") renderExperience();
     else if (page === "cursor") renderCursor();
     else if (page === "about") renderAbout();
     else if (page.includes("project")) renderProject();

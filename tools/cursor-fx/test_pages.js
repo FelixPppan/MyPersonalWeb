@@ -204,10 +204,11 @@ const pages = [
     ["首页", () => win.renderHome()],
     ["博客", () => win.renderBlog()],
     ["作品集", () => win.renderPortfolio()],
+    ["经历", () => win.renderExperience()],
     ["关于", () => win.renderAbout()],
     ["光标", () => win.renderCursor()],
 ];
-for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
     pages.push([`项目 ${id}`, () => { win.location.hash = `#/project?id=${id}`; win.renderProject(); }]);
 }
 
